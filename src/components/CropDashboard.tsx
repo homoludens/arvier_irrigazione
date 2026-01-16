@@ -1,0 +1,187 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { CROP_SETTINGS, type CropType } from '@/config/crops';
+import { runYearSimulation } from '@/lib/calculations';
+import { fetchSeasonWeather } from '@/services/weather';
+import type { Coordinates } from '@/types/location';
+import SoilMoistureGauge from './SoilMoistureGauge';
+import IrrigationAdvice from './IrrigationAdvice';
+
+interface CropDashboardProps {
+  coordinates: Coordinates;
+}
+
+interface WaterBalanceData {
+  moisturePercent: number;
+  waterDeficit: number;
+  kc: number;
+  currentPhase: string;
+  daysWithDeficit: number;
+  totalPrecipitation: number;
+  totalEtc: number;
+  cumulativeGdd: number;
+}
+
+export default function CropDashboard({ coordinates }: CropDashboardProps) {
+  const [selectedCrop, setSelectedCrop] = useState<CropType>('Apple');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [error, setError] = useState<string | null>(null);
+  const [waterBalance, setWaterBalance] = useState<WaterBalanceData | null>(null);
+  const [elevation, setElevation] = useState<number | null>(null);
+  const [weatherCache, setWeatherCache] = useState<Awaited<ReturnType<typeof fetchSeasonWeather>> | null>(null);
+
+  const cropNames = Object.keys(CROP_SETTINGS) as CropType[];
+
+  const fetchWeatherData = useCallback(async () => {
+    setStatus('loading');
+    setError(null);
+    
+    try {
+      const result = await fetchSeasonWeather(coordinates);
+      setWeatherCache(result);
+      setElevation(result.elevation);
+      setStatus('success');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
+      setStatus('error');
+    }
+  }, [coordinates]);
+
+  const calculateWaterBalance = useCallback((cropType: CropType) => {
+    if (!weatherCache) return;
+
+    const cropConfig = CROP_SETTINGS[cropType];
+    const { daily, summary } = runYearSimulation(weatherCache.data, cropConfig);
+
+    const recentDays = daily.slice(-14);
+    const latestDay = daily[daily.length - 1];
+
+    if (!latestDay) return;
+
+    const soilCapacity = 100;
+    const recentDeficit = recentDays.reduce((sum, d) => sum + d.waterDeficit, 0);
+    const recentPrecipitation = recentDays.reduce((sum, d) => sum + d.precipitation, 0);
+    const netChange = recentPrecipitation - recentDeficit;
+    const moisturePercent = Math.max(0, Math.min(100, 70 + (netChange / soilCapacity) * 100));
+
+    setWaterBalance({
+      moisturePercent,
+      waterDeficit: summary.totalWaterDeficit,
+      kc: latestDay.kc,
+      currentPhase: latestDay.currentPhase,
+      daysWithDeficit: summary.daysWithDeficit,
+      totalPrecipitation: summary.totalPrecipitation,
+      totalEtc: summary.totalEtc,
+      cumulativeGdd: latestDay.gddCumulative,
+    });
+  }, [weatherCache]);
+
+  useEffect(() => {
+    fetchWeatherData();
+  }, [fetchWeatherData]);
+
+  useEffect(() => {
+    if (weatherCache) {
+      calculateWaterBalance(selectedCrop);
+    }
+  }, [selectedCrop, weatherCache, calculateWaterBalance]);
+
+  const isLoading = status === 'loading';
+
+  return (
+    <div className="space-y-4">
+      {/* Crop Selector - Large touch-friendly buttons */}
+      <div className="bg-white rounded-2xl p-4 shadow-sm">
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          Select Crop
+        </h2>
+        <div className="grid grid-cols-3 gap-2">
+          {cropNames.map((crop) => (
+            <button
+              key={crop}
+              onClick={() => setSelectedCrop(crop)}
+              className={`py-3 px-2 rounded-xl font-semibold text-sm transition-all ${
+                selectedCrop === crop
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300'
+              }`}
+            >
+              {crop}
+            </button>
+          ))}
+        </div>
+        
+        {/* Elevation badge */}
+        {elevation !== null && (
+          <p className="text-center text-xs text-slate-400 mt-3">
+            {Math.round(elevation)}m elevation
+          </p>
+        )}
+      </div>
+
+      {/* Error state */}
+      {status === 'error' && (
+        <div className="bg-red-50 rounded-2xl p-4 text-center">
+          <p className="text-red-700 text-sm mb-2">{error}</p>
+          <button
+            onClick={fetchWeatherData}
+            className="text-sm text-red-600 font-medium underline"
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
+      {/* Moisture + Advice */}
+      <SoilMoistureGauge
+        moisturePercent={waterBalance?.moisturePercent ?? 50}
+        currentPhase={waterBalance?.currentPhase ?? '—'}
+        isLoading={isLoading}
+      />
+
+      <IrrigationAdvice
+        waterDeficit={waterBalance?.waterDeficit ?? 0}
+        kc={waterBalance?.kc ?? 0.5}
+        currentPhase={waterBalance?.currentPhase ?? '—'}
+        daysWithDeficit={waterBalance?.daysWithDeficit ?? 0}
+        isLoading={isLoading}
+      />
+
+      {/* Quick Stats */}
+      {waterBalance && status === 'success' && (
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+            This Season
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-2xl font-bold text-slate-900">
+                {Math.round(waterBalance.cumulativeGdd)}
+              </p>
+              <p className="text-xs text-slate-500">Growing Degree Days</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900">
+                {waterBalance.totalPrecipitation}<span className="text-base font-normal text-slate-400">mm</span>
+              </p>
+              <p className="text-xs text-slate-500">Rainfall</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900">
+                {waterBalance.totalEtc}<span className="text-base font-normal text-slate-400">mm</span>
+              </p>
+              <p className="text-xs text-slate-500">Water Used (ETc)</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900">
+                {waterBalance.daysWithDeficit}
+              </p>
+              <p className="text-xs text-slate-500">Days in Deficit</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

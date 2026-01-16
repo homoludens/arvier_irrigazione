@@ -8,50 +8,58 @@ import type { Coordinates } from '@/types/location';
 
 export default function Home() {
   const [location, setLocation] = useState<Coordinates | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   return (
-    <main className="max-w-md mx-auto p-4 space-y-6">
-      <header className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Arvier Irrigation</h1>
-        <p className="text-sm text-gray-600">Aosta Valley, Italy</p>
+    <main className="min-h-screen bg-slate-100">
+      {/* Header */}
+      <header className="bg-emerald-700 text-white px-4 py-5 shadow-lg">
+        <div className="max-w-lg mx-auto">
+          <h1 className="text-2xl font-bold tracking-tight">Arvier Irrigation</h1>
+          <p className="text-emerald-200 text-sm mt-0.5">Aosta Valley, Italy</p>
+        </div>
       </header>
 
-      {/* Location Picker */}
-      <section className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Field Location
-        </label>
-        <LocationPicker onLocationSelect={setLocation} />
-      </section>
-
-      {/* Crop Dashboard - shows when location is set */}
-      {location && (
-        <section className="border-t pt-4">
-          <CropDashboard coordinates={location} />
+      <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
+        {/* Location Section */}
+        <section>
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            Your Field
+          </h2>
+          <LocationPicker onLocationSelect={setLocation} />
         </section>
-      )}
 
-      {/* Historical Simulation Panel - collapsible */}
-      {location && (
-        <section className="border-t pt-4">
-          <details className="group">
-            <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-2">
+        {/* Dashboard - shows when location is set */}
+        {location && (
+          <CropDashboard coordinates={location} />
+        )}
+
+        {/* Historical Toggle */}
+        {location && (
+          <section>
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl shadow-sm border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 active:bg-slate-100 transition-colors"
+            >
+              <span>Historical Analysis</span>
               <svg 
-                className="w-4 h-4 transition-transform group-open:rotate-90" 
+                className={`w-5 h-5 text-slate-400 transition-transform ${showHistory ? 'rotate-180' : ''}`}
                 fill="none" 
                 viewBox="0 0 24 24" 
                 stroke="currentColor"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              Historical Simulation
-            </summary>
-            <div className="mt-4">
-              <SimulationPanel coordinates={location} />
-            </div>
-          </details>
-        </section>
-      )}
+            </button>
+            
+            {showHistory && (
+              <div className="mt-3">
+                <SimulationPanel coordinates={location} />
+              </div>
+            )}
+          </section>
+        )}
+      </div>
     </main>
   );
 }
