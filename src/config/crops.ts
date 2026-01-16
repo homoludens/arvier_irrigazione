@@ -21,6 +21,8 @@ export interface CropConfig {
   kcInitial: number;
   /** Crop coefficient at peak growth/water demand */
   kcPeak: number;
+   /** Crop coefficient at end season */
+  kcEnd: number;
   /** Growth phase thresholds ordered by GDD */
   phaseThresholds: PhaseThreshold[];
 }
@@ -53,9 +55,11 @@ export const CROP_SETTINGS = {
     baseTemp: 4.5,
     kcInitial: 0.40,
     kcPeak: 1.00,
+    kcEnd: 0.70,
     phaseThresholds: [
       { name: 'Bloom', gdd: 350 },
       { name: 'Expansion', gdd: 800 },
+      { name: 'Maturiry', gdd: 2500 },
     ],
   },
 
@@ -63,18 +67,23 @@ export const CROP_SETTINGS = {
     baseTemp: 10.0,
     kcInitial: 0.30,
     kcPeak: 0.70,
+    kcEnd: 0.45,
     phaseThresholds: [
       { name: 'Budburst', gdd: 200 },
-      { name: 'Harvest', gdd: 1200 },
+      { name: 'Flowering', gdd: 500 },
+      { name: 'Harvest', gdd: 1300 },
     ],
   },
 
   Pasture: {
-    baseTemp: 5.0,
-    kcInitial: 0.70,
+    baseTemp: 0.0,
+    kcInitial: 0.50,
     kcPeak: 1.05,
+    kcEnd: 0.8,
     phaseThresholds: [
-      { name: 'Growth', gdd: 0 },
+      { name: 'Initial', gdd: 200 },
+      { name: 'Growth', gdd: 500 },
+      { name: 'Harverst', gdd: 800 },
     ],
   },
 } as const satisfies Record<string, CropConfig>;
