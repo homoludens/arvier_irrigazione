@@ -16,6 +16,9 @@ import {
 } from 'recharts';
 import type { PhaseThreshold } from '@/config/crops';
 
+// Shared syncId for all charts to synchronize hover/crosshair
+const CHART_SYNC_ID = 'irrigation-charts';
+
 interface ChartData {
   date: string;
   gddCumulative?: number;
@@ -102,7 +105,7 @@ export function GDDChart({ data, height = 200, phaseThresholds = [] }: GDDChartP
         Growing Degree Days (GDD)
       </h3>
       <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 5 }}>
+        <LineChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 5 }} syncId={CHART_SYNC_ID}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis 
             dataKey="date" 
@@ -180,7 +183,7 @@ export function WeatherChart({ data, height = 200 }: ChartProps) {
         ET0 & Precipitation
       </h3>
       <ResponsiveContainer width="100%" height={height}>
-        <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+        <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} syncId={CHART_SYNC_ID}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis 
             dataKey="date" 
@@ -236,7 +239,7 @@ export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
         Water Balance
       </h3>
       <ResponsiveContainer width="100%" height={height}>
-        <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+        <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} syncId={CHART_SYNC_ID}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis 
             dataKey="date" 
@@ -314,7 +317,7 @@ export function SoilWaterChart({ data, height = 150 }: ChartProps) {
         Soil Water (mm)
       </h3>
       <ResponsiveContainer width="100%" height={height}>
-        <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+        <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} syncId={CHART_SYNC_ID}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis 
             dataKey="date" 
@@ -382,7 +385,7 @@ export function KcChart({ data, height = 150 }: ChartProps) {
         Crop Coefficient (Kc)
       </h3>
       <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+        <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} syncId={CHART_SYNC_ID}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis 
             dataKey="date" 
