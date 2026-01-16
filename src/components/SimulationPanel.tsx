@@ -39,7 +39,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
       amount,
     };
 
-    setIrrigationEvents((prev) => 
+    setIrrigationEvents((prev) =>
       [...prev, newEvent].sort((a, b) => a.date.localeCompare(b.date))
     );
     setNewIrrigationDate('');
@@ -64,7 +64,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
       setElevation(elev);
 
       const result = runYearSimulation(weatherData, cropConfig, irrigationEvents);
-      
+
       setSummary(result.summary);
       setDailyData(result.daily);
       setStatus('success');
@@ -198,6 +198,25 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
       {/* Results */}
       {status === 'success' && summary && dailyData && (
         <div className="space-y-4">
+
+          {/* Charts */}
+
+          <WaterBalanceChart data={dailyData} />
+
+          <WeatherChart data={dailyData} />
+
+          <GDDChart data={dailyData} phaseThresholds={cropConfig.phaseThresholds} />
+
+          <KcChart data={dailyData} />
+
+          {/* Table Toggle */}
+          <button
+            onClick={() => setShowTable(!showTable)}
+            className="w-full py-3 bg-white rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors"
+          >
+            {showTable ? 'Hide Data Table' : 'Show Data Table'}
+          </button>
+
           {/* Summary Stats */}
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between mb-3">
@@ -208,7 +227,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
                 <span className="text-xs text-slate-400">{Math.round(elevation)}m</span>
               )}
             </div>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-2xl font-bold text-slate-900">{summary.totalGdd}°</p>
@@ -240,20 +259,6 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
               )}
             </div>
           </div>
-
-          {/* Charts */}
-          <GDDChart data={dailyData} phaseThresholds={cropConfig.phaseThresholds} />
-          <WeatherChart data={dailyData} />
-          <WaterBalanceChart data={dailyData} />
-          <KcChart data={dailyData} />
-
-          {/* Table Toggle */}
-          <button
-            onClick={() => setShowTable(!showTable)}
-            className="w-full py-3 bg-white rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors"
-          >
-            {showTable ? 'Hide Data Table' : 'Show Data Table'}
-          </button>
 
           {/* Daily Data Table */}
           {showTable && (
