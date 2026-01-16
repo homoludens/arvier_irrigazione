@@ -23,10 +23,11 @@ src/
 │   ├── layout.tsx           # Root layout with metadata/viewport
 │   └── page.tsx             # Home page with location picker, crop dashboard & simulation
 ├── components/
+│   ├── Charts.tsx           # Recharts-based visualization (GDD, Weather, Water Balance, Kc)
 │   ├── CropDashboard.tsx    # Main dashboard with crop selector, gauge & advice
 │   ├── IrrigationAdvice.tsx # Actionable irrigation recommendations
 │   ├── LocationMap.tsx      # Leaflet map (dynamically imported, no SSR)
-│   ├── LocationPicker.tsx   # GPS + map fallback component
+│   ├── LocationPicker.tsx   # GPS + map fallback component + elevation display
 │   ├── SimulationPanel.tsx  # Historical simulation UI with crop/year selection
 │   └── SoilMoistureGauge.tsx # Visual moisture level gauge
 ├── config/
@@ -43,9 +44,10 @@ src/
 
 ### Phase 1: Multi-Crop Configuration
 - `src/config/crops.ts` - `CROP_SETTINGS` constant with:
-  - Apple (baseTemp: 4.5°C, Kc: 0.40-1.00, phases: Bloom@350 GDD, Expansion@800 GDD)
-  - Vineyard (baseTemp: 10.0°C, Kc: 0.30-0.70, phases: Budburst@200 GDD, Harvest@1200 GDD)
-  - Pasture (baseTemp: 5.0°C, Kc: 0.70-1.05, phases: Growth@0 GDD)
+  - Apple (baseTemp: 4.5°C, Kc: 0.40→1.00→0.70, phases: Bloom@350, Expansion@800, Maturity@2500 GDD)
+  - Vineyard (baseTemp: 10.0°C, Kc: 0.30→0.70→0.45, phases: Budburst@200, Flowering@500, Harvest@1300 GDD)
+  - Pasture (baseTemp: 0.0°C, Kc: 0.50→1.05→0.80, phases: Initial@200, Growth@500, Harvest@800 GDD)
+- Three-point Kc curve: `kcInitial`, `kcPeak`, `kcEnd` for FAO-style crop coefficients
 - TypeScript interfaces: `CropConfig`, `PhaseThreshold`, `CropType`
 - Extensible design with documentation for adding new crops
 
@@ -55,6 +57,7 @@ src/
   - Handles all states: idle, requesting, success, denied, unavailable
   - Falls back to map automatically on GPS failure
   - "Fine-tune location on map" option after GPS success
+  - Displays grid elevation for selected coordinates (helps verify location accuracy)
 - `src/components/LocationMap.tsx` - Leaflet map:
   - Dynamically imported (SSR disabled) to avoid window errors
   - Esri satellite imagery layer (good for identifying fields)
@@ -68,6 +71,7 @@ src/
 ### Phase 3: Historical Simulation Engine
 - `src/services/weather.ts` - Open-Meteo API client:
   - `fetchHistoricalWeather(coords, year)` - Fetches full year of daily weather data
+  - `fetchGridElevation(lat, lon)` - Fetches elevation of the weather grid point
   - Returns: tempMax, tempMin, tempMean, precipitation, ET0 (reference evapotranspiration)
   - `getAvailableYears()` - Returns last 10 years for simulation
   - Uses Open-Meteo Historical Weather API (free, no auth required)
@@ -75,7 +79,10 @@ src/
 - `src/lib/calculations.ts` - Irrigation calculation engine:
   - `calculateDailyGdd(tempMax, tempMin, baseTemp)` - GDD using averaging method
   - `getCurrentPhase(cumulativeGdd, phaseThresholds)` - Determines growth phase
-  - `interpolateKc(cumulativeGdd, cropConfig)` - Linear Kc interpolation between initial and peak
+  - `interpolateKc(cumulativeGdd, cropConfig)` - FAO-style three-stage Kc curve:
+    - Development stage (0 → phase 1): kcInitial → kcPeak
+    - Mid-season stage (phase 1 → phase 2): constant kcPeak
+    - Late season stage (phase 2 → phase 3): kcPeak → kcEnd
   - `calculateEtc(et0, kc)` - Crop evapotranspiration (ETc = ET0 × Kc)
   - `runYearSimulation(weatherData, cropConfig)` - Full 365-day simulation
   - Returns daily calculations + summary (totalGdd, totalEtc, waterDeficit, etc.)
@@ -87,10 +94,17 @@ src/
   - Shows simulation results: Total GDD, peak phase, ETc, precipitation, water deficit
   - Expandable daily data table with phase transitions
 
+- `src/components/Charts.tsx` - Recharts-based visualizations:
+  - `GDDChart` - Cumulative GDD with phenophase threshold markers
+  - `WeatherChart` - ET0 and precipitation over time
+  - `WaterBalanceChart` - ETc and water deficit
+  - `KcChart` - Crop coefficient progression through the season
+  - All charts use data sampling for performance with large datasets
+
 **Key Logic:** When user selects a crop (e.g., Vineyard), the simulation automatically uses:
 - Vineyard's `baseTemp` (10°C) for GDD calculation
-- Vineyard's `kcInitial` (0.30) and `kcPeak` (0.70) for ETc calculation
-- Vineyard's `phaseThresholds` for growth phase determination
+- Vineyard's `kcInitial` (0.30), `kcPeak` (0.70), and `kcEnd` (0.45) for ETc calculation
+- Vineyard's `phaseThresholds` for growth phase determination and Kc curve transitions
 
 ### Phase 4: Mobile UI for Farmers
 - `src/components/CropDashboard.tsx` - Main dashboard component:
