@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import LocationPicker from '@/components/LocationPicker';
 import CropDashboard from '@/components/CropDashboard';
 import SimulationPanel from '@/components/SimulationPanel';
@@ -13,10 +14,19 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-slate-100">
       {/* Header */}
-      <header className="bg-emerald-700 text-white px-4 py-5 shadow-lg">
-        <div className="max-w-lg mx-auto">
-          <h1 className="text-2xl font-bold tracking-tight">Arvier Irrigation</h1>
-          <p className="text-emerald-200 text-sm mt-0.5">Aosta Valley, Italy</p>
+      <header className="bg-emerald-700 text-white px-4 py-4 shadow-lg">
+        <div className="max-w-lg mx-auto flex items-center gap-3">
+          <Image
+            src="/arvier_small_logo.png"
+            alt="Arvier"
+            width={48}
+            height={48}
+            className="rounded-lg"
+          />
+          <div>
+            <h1 className="text-xl font-bold tracking-tight">Arvier Irrigation</h1>
+            <p className="text-emerald-200 text-xs">Aosta Valley, Italy</p>
+          </div>
         </div>
       </header>
 

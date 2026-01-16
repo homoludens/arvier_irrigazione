@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { CROP_SETTINGS, type CropType } from '@/config/crops';
-import { runYearSimulation } from '@/lib/calculations';
+import { runYearSimulation, type DailyCalculation } from '@/lib/calculations';
 import { fetchSeasonWeather } from '@/services/weather';
 import type { Coordinates } from '@/types/location';
 import SoilMoistureGauge from './SoilMoistureGauge';
 import IrrigationAdvice from './IrrigationAdvice';
+import { GDDChart, WeatherChart, WaterBalanceChart } from './Charts';
 
 interface CropDashboardProps {
   coordinates: Coordinates;
@@ -28,7 +29,9 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [waterBalance, setWaterBalance] = useState<WaterBalanceData | null>(null);
+  const [dailyData, setDailyData] = useState<DailyCalculation[] | null>(null);
   const [elevation, setElevation] = useState<number | null>(null);
+  const [showCharts, setShowCharts] = useState(false);
   const [weatherCache, setWeatherCache] = useState<Awaited<ReturnType<typeof fetchSeasonWeather>> | null>(null);
 
   const cropNames = Object.keys(CROP_SETTINGS) as CropType[];
@@ -75,6 +78,8 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
       totalEtc: summary.totalEtc,
       cumulativeGdd: latestDay.gddCumulative,
     });
+    
+    setDailyData(daily);
   }, [weatherCache]);
 
   useEffect(() => {
@@ -91,7 +96,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
 
   return (
     <div className="space-y-4">
-      {/* Crop Selector - Large touch-friendly buttons */}
+      {/* Crop Selector */}
       <div className="bg-white rounded-2xl p-4 shadow-sm">
         <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
           Select Crop
@@ -112,7 +117,6 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
           ))}
         </div>
         
-        {/* Elevation badge */}
         {elevation !== null && (
           <p className="text-center text-xs text-slate-400 mt-3">
             {Math.round(elevation)}m elevation
@@ -181,6 +185,34 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Charts Toggle */}
+      {status === 'success' && dailyData && (
+        <>
+          <button
+            onClick={() => setShowCharts(!showCharts)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl shadow-sm text-slate-700 font-medium hover:bg-slate-50 active:bg-slate-100 transition-colors"
+          >
+            <span>Season Charts</span>
+            <svg 
+              className={`w-5 h-5 text-slate-400 transition-transform ${showCharts ? 'rotate-180' : ''}`}
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {showCharts && (
+            <div className="space-y-4">
+              <GDDChart data={dailyData} height={180} />
+              <WeatherChart data={dailyData} height={180} />
+              <WaterBalanceChart data={dailyData} height={180} />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
