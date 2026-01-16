@@ -302,6 +302,75 @@ export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
 }
 
 /**
+ * Soil Water Chart - Shows available soil water over time
+ */
+export function SoilWaterChart({ data, height = 150 }: ChartProps) {
+  const hasIrrigation = data.some(d => (d.irrigationApplied ?? 0) > 0);
+  const chartData = hasIrrigation ? sampleDataWithIrrigation(data) : sampleData(data);
+
+  return (
+    <div className="bg-white rounded-xl p-4 shadow-sm">
+      <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+        Soil Water (mm)
+      </h3>
+      <ResponsiveContainer width="100%" height={height}>
+        <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis 
+            dataKey="date" 
+            tickFormatter={formatMonth}
+            tick={{ fontSize: 10, fill: '#64748b' }}
+            interval="preserveStartEnd"
+          />
+          <YAxis 
+            tick={{ fontSize: 10, fill: '#64748b' }}
+            domain={[0, 110]}
+          />
+          <Tooltip
+            labelFormatter={formatDate}
+            formatter={(value, name) => {
+              const labels: Record<string, string> = {
+                soilWater: 'Soil Water',
+                irrigationApplied: 'Irrigation',
+              };
+              return [`${Number(value).toFixed(1)} mm`, labels[String(name)] || String(name)];
+            }}
+            contentStyle={{ fontSize: 12, borderRadius: 8 }}
+          />
+          <Legend 
+            wrapperStyle={{ fontSize: 10 }}
+            formatter={(value) => {
+              const labels: Record<string, string> = {
+                soilWater: 'Soil Water',
+                irrigationApplied: 'Irrigation',
+              };
+              return labels[String(value)] || String(value);
+            }}
+          />
+          <Area
+            type="monotone"
+            dataKey="soilWater"
+            fill="#10b981"
+            fillOpacity={0.3}
+            stroke="#10b981"
+            strokeWidth={2}
+            name="soilWater"
+          />
+          {hasIrrigation && (
+            <Bar 
+              dataKey="irrigationApplied" 
+              fill="#0ea5e9" 
+              opacity={0.8}
+              name="irrigationApplied"
+            />
+          )}
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+/**
  * Kc Chart - Shows crop coefficient over time
  */
 export function KcChart({ data, height = 150 }: ChartProps) {

@@ -5,7 +5,7 @@ import { CROP_SETTINGS, type CropType } from '@/config/crops';
 import { fetchHistoricalWeather, getAvailableYears } from '@/services/weather';
 import { runYearSimulation, type SimulationSummary, type DailyCalculation, type IrrigationEvent } from '@/lib/calculations';
 import type { Coordinates } from '@/types/location';
-import { GDDChart, WeatherChart, WaterBalanceChart, KcChart } from './Charts';
+import { GDDChart, WeatherChart, WaterBalanceChart, SoilWaterChart, KcChart } from './Charts';
 
 interface SimulationPanelProps {
   coordinates: Coordinates;
@@ -203,19 +203,13 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
 
           <WaterBalanceChart data={dailyData} />
 
+          <SoilWaterChart data={dailyData} />
+
           <WeatherChart data={dailyData} />
 
           <GDDChart data={dailyData} phaseThresholds={cropConfig.phaseThresholds} />
 
           <KcChart data={dailyData} />
-
-          {/* Table Toggle */}
-          <button
-            onClick={() => setShowTable(!showTable)}
-            className="w-full py-3 bg-white rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors"
-          >
-            {showTable ? 'Hide Data Table' : 'Show Data Table'}
-          </button>
 
           {/* Summary Stats */}
           <div className="bg-white rounded-xl p-4 shadow-sm">
@@ -259,6 +253,16 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
               )}
             </div>
           </div>
+
+          {/* Table Toggle */}
+          <button
+            onClick={() => setShowTable(!showTable)}
+            className="w-full py-3 bg-white rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors"
+          >
+            {showTable ? 'Hide Data Table' : 'Show Data Table'}
+          </button>
+
+
 
           {/* Daily Data Table */}
           {showTable && (
