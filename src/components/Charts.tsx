@@ -3,8 +3,6 @@
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -13,7 +11,10 @@ import {
   Legend,
   ComposedChart,
   Area,
+  Bar,
+  ReferenceLine,
 } from 'recharts';
+import type { PhaseThreshold } from '@/config/crops';
 
 interface ChartData {
   date: string;
@@ -29,6 +30,10 @@ interface ChartData {
 interface ChartProps {
   data: ChartData[];
   height?: number;
+}
+
+interface GDDChartProps extends ChartProps {
+  phaseThresholds?: PhaseThreshold[];
 }
 
 // Format date for display (MM/DD)
@@ -51,11 +56,18 @@ const sampleData = (data: ChartData[], maxPoints: number = 60): ChartData[] => {
   return data.filter((_, i) => i % step === 0);
 };
 
+// Colors for phase markers
+const phaseColors = ['#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+
 /**
- * GDD Cumulative Chart - Shows growing degree days accumulation over time
+ * GDD Cumulative Chart - Shows growing degree days accumulation with phenophase markers
  */
-export function GDDChart({ data, height = 200 }: ChartProps) {
+export function GDDChart({ data, height = 200, phaseThresholds = [] }: GDDChartProps) {
   const chartData = sampleData(data);
+  
+  // Calculate max GDD for Y-axis domain
+  const maxGdd = Math.max(...data.map(d => d.gddCumulative || 0));
+  const yMax = Math.max(maxGdd * 1.1, ...phaseThresholds.map(p => p.gdd * 1.1));
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm">
@@ -63,7 +75,7 @@ export function GDDChart({ data, height = 200 }: ChartProps) {
         Growing Degree Days (GDD)
       </h3>
       <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
+        <LineChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis 
             dataKey="date" 
@@ -73,12 +85,32 @@ export function GDDChart({ data, height = 200 }: ChartProps) {
           />
           <YAxis 
             tick={{ fontSize: 10, fill: '#64748b' }}
+            domain={[0, yMax]}
           />
           <Tooltip
             labelFormatter={formatDate}
             formatter={(value) => [`${Math.round(Number(value))}°`, 'GDD']}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
           />
+          
+          {/* Phase threshold reference lines */}
+          {phaseThresholds.map((phase, index) => (
+            <ReferenceLine
+              key={phase.name}
+              y={phase.gdd}
+              stroke={phaseColors[index % phaseColors.length]}
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              label={{
+                value: `${phase.name} (${phase.gdd})`,
+                position: 'right',
+                fill: phaseColors[index % phaseColors.length],
+                fontSize: 10,
+                fontWeight: 600,
+              }}
+            />
+          ))}
+          
           <Line
             type="monotone"
             dataKey="gddCumulative"
@@ -89,6 +121,22 @@ export function GDDChart({ data, height = 200 }: ChartProps) {
           />
         </LineChart>
       </ResponsiveContainer>
+      
+      {/* Phase legend */}
+      {phaseThresholds.length > 0 && (
+        <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-slate-100">
+          {phaseThresholds.map((phase, index) => (
+            <div key={phase.name} className="flex items-center gap-1.5 text-xs">
+              <div 
+                className="w-3 h-0.5 rounded"
+                style={{ backgroundColor: phaseColors[index % phaseColors.length] }}
+              />
+              <span className="text-slate-600">{phase.name}</span>
+              <span className="text-slate-400">({phase.gdd}°)</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

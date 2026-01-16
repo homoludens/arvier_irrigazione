@@ -15,7 +15,7 @@ type SimulationStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
   const [selectedYear, setSelectedYear] = useState<number>(getAvailableYears()[0]);
-  const [selectedCrop, setSelectedCrop] = useState<CropType>('Vineyard');
+  const [selectedCrop, setSelectedCrop] = useState<CropType>('Apple');
   const [status, setStatus] = useState<SimulationStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<SimulationSummary | null>(null);
@@ -54,41 +54,37 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
     <div className="space-y-4">
       {/* Controls */}
       <div className="bg-white rounded-xl p-4 shadow-sm">
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">Year</label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="w-full p-3 border border-slate-200 rounded-lg bg-slate-50 text-sm font-medium"
+        {/* Crop Selector */}
+        <label className="block text-xs text-slate-500 mb-2">Crop</label>
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {(Object.keys(CROP_SETTINGS) as CropType[]).map((crop) => (
+            <button
+              key={crop}
+              onClick={() => setSelectedCrop(crop)}
               disabled={status === 'loading'}
+              className={`py-2.5 px-2 rounded-lg font-semibold text-sm transition-all ${
+                selectedCrop === crop
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300'
+              } disabled:opacity-50`}
             >
-              {availableYears.map((year) => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs text-slate-500 mb-1">Crop</label>
-            <select
-              value={selectedCrop}
-              onChange={(e) => setSelectedCrop(e.target.value as CropType)}
-              className="w-full p-3 border border-slate-200 rounded-lg bg-slate-50 text-sm font-medium"
-              disabled={status === 'loading'}
-            >
-              {Object.keys(CROP_SETTINGS).map((crop) => (
-                <option key={crop} value={crop}>{crop}</option>
-              ))}
-            </select>
-          </div>
+              {crop}
+            </button>
+          ))}
         </div>
 
-        {/* Crop info */}
-        <div className="flex gap-4 text-xs text-slate-500 mb-4">
-          <span>Base: <strong className="text-slate-700">{cropConfig.baseTemp}°C</strong></span>
-          <span>Kc: <strong className="text-slate-700">{cropConfig.kcInitial}-{cropConfig.kcPeak}</strong></span>
-        </div>
+        {/* Year Selector */}
+        <label className="block text-xs text-slate-500 mb-2">Year</label>
+        <select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+          className="w-full p-3 border border-slate-200 rounded-lg bg-slate-50 text-sm font-medium mb-4"
+          disabled={status === 'loading'}
+        >
+          {availableYears.map((year) => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
 
         <button
           onClick={runSimulation}
@@ -141,7 +137,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
           </div>
 
           {/* Charts */}
-          <GDDChart data={dailyData} />
+          <GDDChart data={dailyData} phaseThresholds={cropConfig.phaseThresholds} />
           <WeatherChart data={dailyData} />
           <WaterBalanceChart data={dailyData} />
           <KcChart data={dailyData} />

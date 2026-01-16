@@ -19,14 +19,14 @@ export default function Home() {
           <Image
             src="/arvier_small_logo.png"
             alt="Arvier"
-            width={48}
-            height={48}
+            width={300}
+            height={200}
             className="rounded-lg"
           />
-          <div>
+          {/*<div>
             <h1 className="text-xl font-bold tracking-tight">Arvier Irrigation</h1>
             <p className="text-emerald-200 text-xs">Aosta Valley, Italy</p>
-          </div>
+          </div>*/}
         </div>
       </header>
 
@@ -52,16 +52,16 @@ export default function Home() {
               className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl shadow-sm border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 active:bg-slate-100 transition-colors"
             >
               <span>Historical Analysis</span>
-              <svg 
+              <svg
                 className={`w-5 h-5 text-slate-400 transition-transform ${showHistory ? 'rotate-180' : ''}`}
-                fill="none" 
-                viewBox="0 0 24 24" 
+                fill="none"
+                viewBox="0 0 24 24"
                 stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            
+
             {showHistory && (
               <div className="mt-3">
                 <SimulationPanel coordinates={location} />

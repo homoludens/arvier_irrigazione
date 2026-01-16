@@ -93,6 +93,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
   }, [selectedCrop, weatherCache, calculateWaterBalance]);
 
   const isLoading = status === 'loading';
+  const cropConfig = CROP_SETTINGS[selectedCrop];
 
   return (
     <div className="space-y-4">
@@ -207,7 +208,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
 
           {showCharts && (
             <div className="space-y-4">
-              <GDDChart data={dailyData} height={180} />
+              <GDDChart data={dailyData} height={180} phaseThresholds={cropConfig.phaseThresholds} />
               <WeatherChart data={dailyData} height={180} />
               <WaterBalanceChart data={dailyData} height={180} />
             </div>
