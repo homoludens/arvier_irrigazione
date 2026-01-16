@@ -27,4 +27,5 @@ The engine uses a modular `CropConfig` structure.
 4. Technology:
  * using next.js 16
  * should be deployable for free on vercel
+ * Data Persistence (Vercel KV)   
  * mobile must be good.
