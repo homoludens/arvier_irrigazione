@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import type { Coordinates, GpsStatus } from '@/types/location';
 import { ARVIER_DEFAULT } from '@/types/location';
+import { fetchGridElevation } from '@/services/weather';
 
 // Dynamically import the map to avoid SSR issues with Leaflet
 const LocationMap = dynamic(() => import('./LocationMap'), {
@@ -29,6 +30,8 @@ export default function LocationPicker({
   );
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
   const [showMap, setShowMap] = useState(false);
+  const [elevation, setElevation] = useState<number | null>(null);
+  const [loadingElevation, setLoadingElevation] = useState(false);
 
   const requestGpsLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -77,6 +80,28 @@ export default function LocationPicker({
     [onLocationSelect]
   );
 
+  // Fetch elevation when coordinates change
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingElevation(true);
+    
+    fetchGridElevation(coordinates.latitude, coordinates.longitude)
+      .then((elev) => {
+        if (!cancelled) {
+          setElevation(Math.round(elev));
+          setLoadingElevation(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setElevation(null);
+          setLoadingElevation(false);
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, [coordinates.latitude, coordinates.longitude]);
+
   const getStatusMessage = (): string => {
     switch (gpsStatus) {
       case 'requesting':
@@ -114,6 +139,16 @@ export default function LocationPicker({
         </div>
         <div className="font-mono text-sm">
           {coordinates.latitude.toFixed(6)}, {coordinates.longitude.toFixed(6)}
+        </div>
+        <div className="text-sm text-gray-600 mt-2">
+          Elevation:{' '}
+          {loadingElevation ? (
+            <span className="text-gray-400">Loading...</span>
+          ) : elevation !== null ? (
+            <span className="font-medium">{elevation}m</span>
+          ) : (
+            <span className="text-gray-400">-</span>
+          )}
         </div>
       </div>
 
