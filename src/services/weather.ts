@@ -3,9 +3,16 @@
  * 
  * Fetches historical weather data for irrigation calculations.
  * API docs: https://open-meteo.com/en/docs/historical-weather-api
+ * 
+ * Note: Open-Meteo uses a coarse grid that may return data for mountain
+ * peaks instead of valley floors. We apply a temperature lapse rate
+ * correction when the user specifies a target elevation.
  */
 
 import type { Coordinates } from '@/types/location';
+
+/** Standard atmospheric lapse rate: ~6.5°C per 1000m */
+const LAPSE_RATE = 6.5 / 1000;
 
 /** Daily weather data from Open-Meteo */
 export interface DailyWeatherData {
@@ -65,16 +72,24 @@ export async function fetchHistoricalWeather(
 
   const json: OpenMeteoResponse = await response.json();
 
+  // Calculate temperature correction if user specified target elevation
+  // Positive correction = target is lower than grid (warmer)
+  const gridElevation = json.elevation;
+  const targetElevation = coords.elevation;
+  const tempCorrection = targetElevation !== undefined
+    ? (gridElevation - targetElevation) * LAPSE_RATE
+    : 0;
+
   const data: DailyWeatherData[] = json.daily.time.map((date, i) => ({
     date,
-    tempMax: json.daily.temperature_2m_max[i],
-    tempMin: json.daily.temperature_2m_min[i],
-    tempMean: json.daily.temperature_2m_mean[i],
+    tempMax: json.daily.temperature_2m_max[i] + tempCorrection,
+    tempMin: json.daily.temperature_2m_min[i] + tempCorrection,
+    tempMean: json.daily.temperature_2m_mean[i] + tempCorrection,
     precipitation: json.daily.precipitation_sum[i] ?? 0,
     et0: json.daily.et0_fao_evapotranspiration[i] ?? 0,
   }));
 
-  return { data, elevation: json.elevation };
+  return { data, elevation: targetElevation ?? gridElevation };
 }
 
 /**
@@ -133,16 +148,23 @@ export async function fetchRecentWeather(
 
   const json: OpenMeteoResponse = await response.json();
 
+  // Calculate temperature correction if user specified target elevation
+  const gridElevation = json.elevation;
+  const targetElevation = coords.elevation;
+  const tempCorrection = targetElevation !== undefined
+    ? (gridElevation - targetElevation) * LAPSE_RATE
+    : 0;
+
   const data: DailyWeatherData[] = json.daily.time.map((date, i) => ({
     date,
-    tempMax: json.daily.temperature_2m_max[i],
-    tempMin: json.daily.temperature_2m_min[i],
-    tempMean: json.daily.temperature_2m_mean[i],
+    tempMax: json.daily.temperature_2m_max[i] + tempCorrection,
+    tempMin: json.daily.temperature_2m_min[i] + tempCorrection,
+    tempMean: json.daily.temperature_2m_mean[i] + tempCorrection,
     precipitation: json.daily.precipitation_sum[i] ?? 0,
     et0: json.daily.et0_fao_evapotranspiration[i] ?? 0,
   }));
 
-  return { data, elevation: json.elevation };
+  return { data, elevation: targetElevation ?? gridElevation };
 }
 
 /**
@@ -194,14 +216,21 @@ export async function fetchSeasonWeather(
 
   const json: OpenMeteoResponse = await response.json();
 
+  // Calculate temperature correction if user specified target elevation
+  const gridElevation = json.elevation;
+  const targetElevation = coords.elevation;
+  const tempCorrection = targetElevation !== undefined
+    ? (gridElevation - targetElevation) * LAPSE_RATE
+    : 0;
+
   const data: DailyWeatherData[] = json.daily.time.map((date, i) => ({
     date,
-    tempMax: json.daily.temperature_2m_max[i],
-    tempMin: json.daily.temperature_2m_min[i],
-    tempMean: json.daily.temperature_2m_mean[i],
+    tempMax: json.daily.temperature_2m_max[i] + tempCorrection,
+    tempMin: json.daily.temperature_2m_min[i] + tempCorrection,
+    tempMean: json.daily.temperature_2m_mean[i] + tempCorrection,
     precipitation: json.daily.precipitation_sum[i] ?? 0,
     et0: json.daily.et0_fao_evapotranspiration[i] ?? 0,
   }));
 
-  return { data, elevation: json.elevation };
+  return { data, elevation: targetElevation ?? gridElevation };
 }
