@@ -90,3 +90,118 @@ export function getAvailableYears(): number[] {
   }
   return years;
 }
+
+/**
+ * Fetches recent weather data (last N days) for real-time calculations
+ * Uses a combination of historical archive and forecast API for most recent data
+ */
+export async function fetchRecentWeather(
+  coords: Coordinates,
+  days: number = 30
+): Promise<{ data: DailyWeatherData[]; elevation: number }> {
+  const endDate = new Date();
+  // Go back 2 days to ensure archive data is available
+  endDate.setDate(endDate.getDate() - 2);
+  
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - days);
+
+  const formatDate = (d: Date) => d.toISOString().split('T')[0];
+
+  const params = new URLSearchParams({
+    latitude: coords.latitude.toString(),
+    longitude: coords.longitude.toString(),
+    start_date: formatDate(startDate),
+    end_date: formatDate(endDate),
+    daily: [
+      'temperature_2m_max',
+      'temperature_2m_min',
+      'temperature_2m_mean',
+      'precipitation_sum',
+      'et0_fao_evapotranspiration',
+    ].join(','),
+    timezone: 'Europe/Rome',
+  });
+
+  const response = await fetch(
+    `https://archive-api.open-meteo.com/v1/archive?${params}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Weather API error: ${response.status} ${response.statusText}`);
+  }
+
+  const json: OpenMeteoResponse = await response.json();
+
+  const data: DailyWeatherData[] = json.daily.time.map((date, i) => ({
+    date,
+    tempMax: json.daily.temperature_2m_max[i],
+    tempMin: json.daily.temperature_2m_min[i],
+    tempMean: json.daily.temperature_2m_mean[i],
+    precipitation: json.daily.precipitation_sum[i] ?? 0,
+    et0: json.daily.et0_fao_evapotranspiration[i] ?? 0,
+  }));
+
+  return { data, elevation: json.elevation };
+}
+
+/**
+ * Fetches current year weather data from season start (March 1) to recent
+ * Used for calculating cumulative GDD and current water balance
+ */
+export async function fetchSeasonWeather(
+  coords: Coordinates
+): Promise<{ data: DailyWeatherData[]; elevation: number }> {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  
+  // Season starts March 1st for alpine crops
+  const seasonStart = new Date(currentYear, 2, 1); // March 1
+  
+  // End date is 2 days ago (archive data availability)
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() - 2);
+  
+  // If we're before March, use previous year's season
+  if (now < seasonStart) {
+    return fetchHistoricalWeather(coords, currentYear - 1);
+  }
+
+  const formatDate = (d: Date) => d.toISOString().split('T')[0];
+
+  const params = new URLSearchParams({
+    latitude: coords.latitude.toString(),
+    longitude: coords.longitude.toString(),
+    start_date: formatDate(seasonStart),
+    end_date: formatDate(endDate),
+    daily: [
+      'temperature_2m_max',
+      'temperature_2m_min',
+      'temperature_2m_mean',
+      'precipitation_sum',
+      'et0_fao_evapotranspiration',
+    ].join(','),
+    timezone: 'Europe/Rome',
+  });
+
+  const response = await fetch(
+    `https://archive-api.open-meteo.com/v1/archive?${params}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Weather API error: ${response.status} ${response.statusText}`);
+  }
+
+  const json: OpenMeteoResponse = await response.json();
+
+  const data: DailyWeatherData[] = json.daily.time.map((date, i) => ({
+    date,
+    tempMax: json.daily.temperature_2m_max[i],
+    tempMin: json.daily.temperature_2m_min[i],
+    tempMean: json.daily.temperature_2m_mean[i],
+    precipitation: json.daily.precipitation_sum[i] ?? 0,
+    et0: json.daily.et0_fao_evapotranspiration[i] ?? 0,
+  }));
+
+  return { data, elevation: json.elevation };
+}

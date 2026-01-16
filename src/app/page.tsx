@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import LocationPicker from '@/components/LocationPicker';
+import CropDashboard from '@/components/CropDashboard';
 import SimulationPanel from '@/components/SimulationPanel';
 import type { Coordinates } from '@/types/location';
 
@@ -23,10 +24,32 @@ export default function Home() {
         <LocationPicker onLocationSelect={setLocation} />
       </section>
 
-      {/* Simulation Panel - shows when location is set */}
+      {/* Crop Dashboard - shows when location is set */}
       {location && (
         <section className="border-t pt-4">
-          <SimulationPanel coordinates={location} />
+          <CropDashboard coordinates={location} />
+        </section>
+      )}
+
+      {/* Historical Simulation Panel - collapsible */}
+      {location && (
+        <section className="border-t pt-4">
+          <details className="group">
+            <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-2">
+              <svg 
+                className="w-4 h-4 transition-transform group-open:rotate-90" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              Historical Simulation
+            </summary>
+            <div className="mt-4">
+              <SimulationPanel coordinates={location} />
+            </div>
+          </details>
         </section>
       )}
     </main>

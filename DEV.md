@@ -21,17 +21,20 @@ src/
 ├── app/
 │   ├── globals.css          # Tailwind v4 import
 │   ├── layout.tsx           # Root layout with metadata/viewport
-│   └── page.tsx             # Home page with location picker & simulation
+│   └── page.tsx             # Home page with location picker, crop dashboard & simulation
 ├── components/
-│   ├── LocationPicker.tsx   # GPS + map fallback component
+│   ├── CropDashboard.tsx    # Main dashboard with crop selector, gauge & advice
+│   ├── IrrigationAdvice.tsx # Actionable irrigation recommendations
 │   ├── LocationMap.tsx      # Leaflet map (dynamically imported, no SSR)
-│   └── SimulationPanel.tsx  # Historical simulation UI with crop/year selection
+│   ├── LocationPicker.tsx   # GPS + map fallback component
+│   ├── SimulationPanel.tsx  # Historical simulation UI with crop/year selection
+│   └── SoilMoistureGauge.tsx # Visual moisture level gauge
 ├── config/
 │   └── crops.ts             # CROP_SETTINGS constant with crop parameters
 ├── lib/
 │   └── calculations.ts      # GDD, Kc interpolation, ETc calculations
 ├── services/
-│   └── weather.ts           # Open-Meteo historical weather API client
+│   └── weather.ts           # Open-Meteo weather API client (historical + season)
 └── types/
     └── location.ts          # Coordinates interface and GPS types
 ```
@@ -88,6 +91,38 @@ src/
 - Vineyard's `baseTemp` (10°C) for GDD calculation
 - Vineyard's `kcInitial` (0.30) and `kcPeak` (0.70) for ETc calculation
 - Vineyard's `phaseThresholds` for growth phase determination
+
+### Phase 4: Mobile UI for Farmers
+- `src/components/CropDashboard.tsx` - Main dashboard component:
+  - Crop selector dropdown (Apple, Vineyard, Pasture)
+  - Instantly updates all displays when crop is changed
+  - Displays crop parameters (Base Temp, Kc range, phases)
+  - Caches weather data to avoid refetching on crop change
+  - Shows season summary (GDD, precipitation, ETc, deficit days)
+
+- `src/components/SoilMoistureGauge.tsx` - Visual gauge:
+  - High-contrast horizontal bar gauge for outdoor visibility
+  - Color-coded levels: green (adequate), yellow (moderate), orange (low), red (critical)
+  - Shows current growth phase badge
+  - Tick marks at 0%, 25%, 50%, 75%, 100%
+  - Loading skeleton state
+
+- `src/components/IrrigationAdvice.tsx` - Actionable recommendations:
+  - 5 urgency levels: none, low, moderate, high, critical
+  - Color-coded cards with icons
+  - Shows specific advice based on water deficit + growth phase
+  - Displays current Kc and phase in footer
+  - Logic considers both deficit amount and crop stage (high Kc = critical phase)
+
+- `src/services/weather.ts` - Extended with:
+  - `fetchSeasonWeather(coords)` - Current season data (March 1 to present)
+  - `fetchRecentWeather(coords, days)` - Last N days for real-time calculations
+
+**Key UX Features:**
+- Instant updates when changing crops (no reload needed)
+- High-contrast colors designed for outdoor mobile use
+- Historical simulation moved to collapsible section
+- Loading states for all async operations
 
 ## Running Locally
 
@@ -159,9 +194,9 @@ Refer to `Arvier_MultiCrop_Irrigation.md` for full requirements:
 
 - [ ] Pre-Rain Recharge logic (protect valley soil before rainfall events)
 - [ ] 10-year comparison view (compare same crop across multiple years)
-- [ ] Real-time/forecast mode (current season irrigation recommendations)
-- [ ] Irrigation recommendations UI with scheduling
+- [ ] Weather forecast integration (predict upcoming irrigation needs)
 - [ ] Data export functionality
+- [ ] Offline support / PWA capabilities
 
 ## Notes for Future Development
 
