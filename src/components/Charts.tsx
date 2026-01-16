@@ -197,7 +197,7 @@ export function WeatherChart({ data, height = 200 }: ChartProps) {
 }
 
 /**
- * Water Balance Chart - Shows ETc, precipitation, and water deficit
+ * Water Balance Chart - Shows ETc and water deficit
  */
 export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
   const chartData = sampleData(data);
@@ -224,7 +224,6 @@ export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
             formatter={(value, name) => {
               const labels: Record<string, string> = {
                 etc: 'Crop Water Use',
-                precipitation: 'Rainfall',
                 waterDeficit: 'Deficit',
               };
               return [`${Number(value).toFixed(1)} mm`, labels[String(name)] || String(name)];
@@ -236,17 +235,10 @@ export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
             formatter={(value) => {
               const labels: Record<string, string> = {
                 etc: 'ETc',
-                precipitation: 'Rain',
                 waterDeficit: 'Deficit',
               };
               return labels[String(value)] || String(value);
             }}
-          />
-          <Bar 
-            dataKey="precipitation" 
-            fill="#38bdf8" 
-            opacity={0.6}
-            name="precipitation"
           />
           <Line
             type="monotone"
