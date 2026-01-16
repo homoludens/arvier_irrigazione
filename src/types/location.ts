@@ -9,6 +9,6 @@ export type GpsStatus = 'idle' | 'requesting' | 'success' | 'denied' | 'unavaila
 
 /** Default coordinates for Arvier, Aosta Valley */
 export const ARVIER_DEFAULT: Coordinates = {
-  latitude: 45.7069,
-  longitude: 7.0792,
+  latitude: 45.704411,
+  longitude: 7.177059,
 };

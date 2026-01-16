@@ -66,38 +66,52 @@ export function getCurrentPhase(
 /**
  * Interpolate Kc value based on cumulative GDD and growth phases
  * 
- * Kc transitions linearly from kcInitial to kcPeak as the plant
- * progresses through its growth phases.
+ * FAO-style Kc curve with three stages:
+ * - Development (0 → midGdd): kcInitial → kcPeak
+ * - Mid-season (midGdd → lateGdd): kcPeak (constant)
+ * - Late season (lateGdd → endGdd): kcPeak → kcEnd
  */
 export function interpolateKc(
   cumulativeGdd: number,
   cropConfig: CropConfig
 ): number {
-  const { kcInitial, kcPeak, phaseThresholds } = cropConfig;
+  const { kcInitial, kcPeak, kcEnd, phaseThresholds } = cropConfig;
   
-  if (phaseThresholds.length === 0) {
+  if (phaseThresholds.length < 2) {
     return kcInitial;
   }
   
-  // Get the final phase GDD (peak development)
-  const peakGdd = phaseThresholds[phaseThresholds.length - 1].gdd;
-  
-  if (peakGdd === 0) {
-    // For crops like Pasture where growth starts immediately
-    return kcPeak;
-  }
+  // Use phase thresholds to define Kc curve segments
+  // Phase 1 end = development complete, reach kcPeak
+  // Phase 2 end = mid-season complete, start decline
+  // Phase 3 end = season end, reach kcEnd
+  const midGdd = phaseThresholds[0].gdd;      // End of development
+  const lateGdd = phaseThresholds[1].gdd;     // End of mid-season
+  const endGdd = phaseThresholds[phaseThresholds.length - 1].gdd; // Season end
   
   if (cumulativeGdd <= 0) {
     return kcInitial;
   }
   
-  if (cumulativeGdd >= peakGdd) {
+  // Development stage: kcInitial → kcPeak
+  if (cumulativeGdd < midGdd) {
+    const progress = cumulativeGdd / midGdd;
+    return kcInitial + progress * (kcPeak - kcInitial);
+  }
+  
+  // Mid-season stage: constant kcPeak
+  if (cumulativeGdd < lateGdd) {
     return kcPeak;
   }
   
-  // Linear interpolation between initial and peak
-  const progress = cumulativeGdd / peakGdd;
-  return kcInitial + progress * (kcPeak - kcInitial);
+  // Late season stage: kcPeak → kcEnd
+  if (cumulativeGdd < endGdd) {
+    const progress = (cumulativeGdd - lateGdd) / (endGdd - lateGdd);
+    return kcPeak + progress * (kcEnd - kcPeak);
+  }
+  
+  // Past end of season
+  return kcEnd;
 }
 
 /**
