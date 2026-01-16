@@ -24,8 +24,15 @@ interface WaterBalanceData {
   cumulativeGdd: number;
 }
 
+// Get default season start (January 1st of current year)
+const getDefaultSeasonStart = () => {
+  const year = new Date().getFullYear();
+  return `${year}-01-01`;
+};
+
 export default function CropDashboard({ coordinates }: CropDashboardProps) {
   const [selectedCrop, setSelectedCrop] = useState<CropType>('Apple');
+  const [seasonStart, setSeasonStart] = useState<string>(getDefaultSeasonStart());
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
   const [waterBalance, setWaterBalance] = useState<WaterBalanceData | null>(null);
@@ -39,9 +46,9 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
   const fetchWeatherData = useCallback(async () => {
     setStatus('loading');
     setError(null);
-    
+
     try {
-      const result = await fetchSeasonWeather(coordinates);
+      const result = await fetchSeasonWeather(coordinates, seasonStart);
       setWeatherCache(result);
       setElevation(result.elevation);
       setStatus('success');
@@ -49,7 +56,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
       setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
       setStatus('error');
     }
-  }, [coordinates]);
+  }, [coordinates, seasonStart]);
 
   const calculateWaterBalance = useCallback((cropType: CropType) => {
     if (!weatherCache) return;
@@ -78,7 +85,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
       totalEtc: summary.totalEtc,
       cumulativeGdd: latestDay.gddCumulative,
     });
-    
+
     setDailyData(daily);
   }, [weatherCache]);
 
@@ -97,7 +104,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
 
   return (
     <div className="space-y-4">
-      {/* Crop Selector */}
+      {/* Crop Selector & Season Start */}
       <div className="bg-white rounded-2xl p-4 shadow-sm">
         <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
           Select Crop
@@ -117,7 +124,9 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
             </button>
           ))}
         </div>
-        
+
+
+
         {elevation !== null && (
           <p className="text-center text-xs text-slate-400 mt-3">
             {Math.round(elevation)}m elevation
@@ -138,55 +147,6 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
         </div>
       )}
 
-      {/* Moisture + Advice */}
-      <SoilMoistureGauge
-        moisturePercent={waterBalance?.moisturePercent ?? 50}
-        currentPhase={waterBalance?.currentPhase ?? '—'}
-        isLoading={isLoading}
-      />
-
-      <IrrigationAdvice
-        waterDeficit={waterBalance?.waterDeficit ?? 0}
-        kc={waterBalance?.kc ?? 0.5}
-        currentPhase={waterBalance?.currentPhase ?? '—'}
-        daysWithDeficit={waterBalance?.daysWithDeficit ?? 0}
-        isLoading={isLoading}
-      />
-
-      {/* Quick Stats */}
-      {waterBalance && status === 'success' && (
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-            This Season
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-2xl font-bold text-slate-900">
-                {Math.round(waterBalance.cumulativeGdd)}
-              </p>
-              <p className="text-xs text-slate-500">Growing Degree Days</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">
-                {waterBalance.totalPrecipitation}<span className="text-base font-normal text-slate-400">mm</span>
-              </p>
-              <p className="text-xs text-slate-500">Rainfall</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">
-                {waterBalance.totalEtc}<span className="text-base font-normal text-slate-400">mm</span>
-              </p>
-              <p className="text-xs text-slate-500">Water Used (ETc)</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-slate-900">
-                {waterBalance.daysWithDeficit}
-              </p>
-              <p className="text-xs text-slate-500">Days in Deficit</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Charts Toggle */}
       {status === 'success' && dailyData && (
@@ -195,11 +155,13 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
             onClick={() => setShowCharts(!showCharts)}
             className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl shadow-sm text-slate-700 font-medium hover:bg-slate-50 active:bg-slate-100 transition-colors"
           >
-            <span>Season Charts</span>
-            <svg 
+            <span>This season</span>
+
+
+            <svg
               className={`w-5 h-5 text-slate-400 transition-transform ${showCharts ? 'rotate-180' : ''}`}
-              fill="none" 
-              viewBox="0 0 24 24" 
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -208,6 +170,72 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
 
           {showCharts && (
             <div className="space-y-4">
+
+
+              {/* Season Start Date */}
+              <div className="mt-4 pt-4 border-t border-slate-100">
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                  Season Start
+                </label>
+                <input
+                  type="date"
+                  value={seasonStart}
+                  onChange={(e) => setSeasonStart(e.target.value)}
+                  className="w-full p-2.5 border border-slate-200 rounded-lg bg-slate-50 text-sm"
+                />
+              </div>
+
+              {/* Moisture + Advice */}
+              <SoilMoistureGauge
+                moisturePercent={waterBalance?.moisturePercent ?? 50}
+                currentPhase={waterBalance?.currentPhase ?? '—'}
+                isLoading={isLoading}
+              />
+
+              <IrrigationAdvice
+                waterDeficit={waterBalance?.waterDeficit ?? 0}
+                kc={waterBalance?.kc ?? 0.5}
+                currentPhase={waterBalance?.currentPhase ?? '—'}
+                daysWithDeficit={waterBalance?.daysWithDeficit ?? 0}
+                isLoading={isLoading}
+              />
+
+              {/* Quick Stats */}
+              {waterBalance && status === 'success' && (
+                <div className="bg-white rounded-2xl p-4 shadow-sm">
+                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                    This Season
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {Math.round(waterBalance.cumulativeGdd)}
+                      </p>
+                      <p className="text-xs text-slate-500">Growing Degree Days</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {waterBalance.totalPrecipitation}<span className="text-base font-normal text-slate-400">mm</span>
+                      </p>
+                      <p className="text-xs text-slate-500">Rainfall</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {waterBalance.totalEtc}<span className="text-base font-normal text-slate-400">mm</span>
+                      </p>
+                      <p className="text-xs text-slate-500">Water Used (ETc)</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {waterBalance.daysWithDeficit}
+                      </p>
+                      <p className="text-xs text-slate-500">Days in Deficit</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
               <GDDChart data={dailyData} height={180} phaseThresholds={cropConfig.phaseThresholds} />
               <WeatherChart data={dailyData} height={180} />
               <WaterBalanceChart data={dailyData} height={180} />

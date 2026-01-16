@@ -175,25 +175,33 @@ export async function fetchRecentWeather(
 }
 
 /**
- * Fetches current year weather data from season start (March 1) to recent
+ * Fetches current year weather data from season start to recent
  * Used for calculating cumulative GDD and current water balance
+ * @param coords - Location coordinates
+ * @param seasonStartDate - Optional season start date string (YYYY-MM-DD), defaults to Jan 1 of current year
  */
 export async function fetchSeasonWeather(
-  coords: Coordinates
+  coords: Coordinates,
+  seasonStartDate?: string
 ): Promise<{ data: DailyWeatherData[]; elevation: number }> {
   const now = new Date();
   const currentYear = now.getFullYear();
   
-  // Season starts March 1st for alpine crops
-  const seasonStart = new Date(currentYear, 2, 1); // March 1
+  // Season start: use provided date or default to January 1st of current year
+  let seasonStart: Date;
+  if (seasonStartDate) {
+    seasonStart = new Date(seasonStartDate + 'T00:00:00');
+  } else {
+    seasonStart = new Date(currentYear, 0, 1); // January 1
+  }
   
   // End date is 2 days ago (archive data availability)
   const endDate = new Date();
   endDate.setDate(endDate.getDate() - 2);
   
-  // If we're before March, use previous year's season
-  if (now < seasonStart) {
-    return fetchHistoricalWeather(coords, currentYear - 1);
+  // If season start is in the future, use previous year
+  if (seasonStart > now) {
+    seasonStart.setFullYear(seasonStart.getFullYear() - 1);
   }
 
   const formatDate = (d: Date) => d.toISOString().split('T')[0];
