@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { CROP_SETTINGS, type CropType } from '@/config/crops';
 import { fetchHistoricalWeather, getAvailableYears } from '@/services/weather';
-import { runYearSimulation, type SimulationSummary, type DailyCalculation } from '@/lib/calculations';
+import { runYearSimulation, type SimulationSummary, type DailyCalculation, type IrrigationEvent } from '@/lib/calculations';
 import type { Coordinates } from '@/types/location';
 import { GDDChart, WeatherChart, WaterBalanceChart, KcChart } from './Charts';
 
@@ -22,9 +22,33 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
   const [dailyData, setDailyData] = useState<DailyCalculation[] | null>(null);
   const [elevation, setElevation] = useState<number | null>(null);
   const [showTable, setShowTable] = useState(false);
+  const [irrigationEvents, setIrrigationEvents] = useState<IrrigationEvent[]>([]);
+  const [newIrrigationDate, setNewIrrigationDate] = useState<string>('');
+  const [newIrrigationAmount, setNewIrrigationAmount] = useState<string>('');
 
   const availableYears = getAvailableYears();
   const cropConfig = CROP_SETTINGS[selectedCrop];
+
+  const addIrrigationEvent = () => {
+    if (!newIrrigationDate || !newIrrigationAmount) return;
+    const amount = parseFloat(newIrrigationAmount);
+    if (isNaN(amount) || amount <= 0) return;
+
+    const newEvent: IrrigationEvent = {
+      date: newIrrigationDate,
+      amount,
+    };
+
+    setIrrigationEvents((prev) => 
+      [...prev, newEvent].sort((a, b) => a.date.localeCompare(b.date))
+    );
+    setNewIrrigationDate('');
+    setNewIrrigationAmount('');
+  };
+
+  const removeIrrigationEvent = (index: number) => {
+    setIrrigationEvents((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const runSimulation = async () => {
     setStatus('loading');
@@ -39,7 +63,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
       );
       setElevation(elev);
 
-      const result = runYearSimulation(weatherData, cropConfig);
+      const result = runYearSimulation(weatherData, cropConfig, irrigationEvents);
       
       setSummary(result.summary);
       setDailyData(result.daily);
@@ -85,6 +109,75 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
             <option key={year} value={year}>{year}</option>
           ))}
         </select>
+
+        {/* Irrigation Events */}
+        <label className="block text-xs text-slate-500 mb-2">Irrigation Events</label>
+        <div className="bg-slate-50 rounded-lg p-3 mb-4">
+          <div className="flex gap-2 mb-3">
+            <input
+              type="date"
+              value={newIrrigationDate}
+              onChange={(e) => setNewIrrigationDate(e.target.value)}
+              min={`${selectedYear}-01-01`}
+              max={`${selectedYear}-12-31`}
+              className="flex-1 p-2 border border-slate-200 rounded-lg bg-white text-sm"
+              disabled={status === 'loading'}
+            />
+            <input
+              type="number"
+              value={newIrrigationAmount}
+              onChange={(e) => setNewIrrigationAmount(e.target.value)}
+              placeholder="mm"
+              min="1"
+              step="1"
+              className="w-20 p-2 border border-slate-200 rounded-lg bg-white text-sm text-right"
+              disabled={status === 'loading'}
+            />
+            <button
+              onClick={addIrrigationEvent}
+              disabled={status === 'loading' || !newIrrigationDate || !newIrrigationAmount}
+              className="px-3 py-2 bg-sky-500 text-white rounded-lg font-semibold text-sm hover:bg-sky-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
+            >
+              Add
+            </button>
+          </div>
+
+          {irrigationEvents.length > 0 && (
+            <div className="space-y-1.5">
+              {irrigationEvents.map((event, index) => (
+                <div
+                  key={`${event.date}-${index}`}
+                  className="flex items-center justify-between bg-white rounded-lg px-3 py-2 text-sm"
+                >
+                  <span className="text-slate-700">
+                    {new Date(event.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                  <span className="text-sky-600 font-medium">{event.amount} mm</span>
+                  <button
+                    onClick={() => removeIrrigationEvent(index)}
+                    className="text-slate-400 hover:text-red-500 transition-colors"
+                    disabled={status === 'loading'}
+                  >
+                    &times;
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => setIrrigationEvents([])}
+                className="w-full mt-2 py-1.5 text-xs text-slate-500 hover:text-red-500 transition-colors"
+                disabled={status === 'loading'}
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
+          {irrigationEvents.length === 0 && (
+            <p className="text-xs text-slate-400 text-center">
+              No irrigation events added
+            </p>
+          )}
+        </div>
 
         <button
           onClick={runSimulation}
@@ -133,6 +226,18 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
                 <p className="text-2xl font-bold text-orange-600">{summary.totalWaterDeficit}<span className="text-sm font-normal">mm</span></p>
                 <p className="text-xs text-slate-500">Water Deficit</p>
               </div>
+              {summary.totalIrrigation > 0 && (
+                <>
+                  <div className="bg-slate-50 rounded-lg p-3">
+                    <p className="text-2xl font-bold text-sky-600">{summary.totalIrrigation}<span className="text-sm font-normal">mm</span></p>
+                    <p className="text-xs text-slate-500">Irrigation Applied</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3">
+                    <p className="text-2xl font-bold text-emerald-600">{summary.netWaterDeficit}<span className="text-sm font-normal">mm</span></p>
+                    <p className="text-xs text-slate-500">Net Deficit</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -160,27 +265,29 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
                       <th className="p-2 text-left font-semibold text-slate-600">Date</th>
                       <th className="p-2 text-right font-semibold text-slate-600">GDD</th>
                       <th className="p-2 text-left font-semibold text-slate-600">Phase</th>
-                      <th className="p-2 text-right font-semibold text-slate-600">Kc</th>
-                      <th className="p-2 text-right font-semibold text-slate-600">ET0</th>
                       <th className="p-2 text-right font-semibold text-slate-600">ETc</th>
                       <th className="p-2 text-right font-semibold text-slate-600">Rain</th>
+                      <th className="p-2 text-right font-semibold text-slate-600">Irrig</th>
+                      <th className="p-2 text-right font-semibold text-slate-600">Soil</th>
                       <th className="p-2 text-right font-semibold text-slate-600">Deficit</th>
                     </tr>
                   </thead>
                   <tbody>
                     {dailyData
-                      .filter((d) => d.gddDaily > 0 || d.waterDeficit > 0)
+                      .filter((d) => d.gddDaily > 0 || d.waterDeficit > 0 || d.irrigationApplied > 0)
                       .map((day) => (
                         <tr key={day.date} className="border-b border-slate-100 hover:bg-slate-50">
                           <td className="p-2 text-slate-700">{day.date}</td>
                           <td className="p-2 text-right text-slate-900">{day.gddCumulative}</td>
                           <td className="p-2 text-slate-600">{day.currentPhase}</td>
-                          <td className="p-2 text-right text-slate-600">{day.kc}</td>
-                          <td className="p-2 text-right text-slate-600">{day.et0}</td>
                           <td className="p-2 text-right text-slate-900">{day.etc}</td>
                           <td className="p-2 text-right text-sky-600">{day.precipitation || '-'}</td>
+                          <td className="p-2 text-right text-sky-500 font-medium">
+                            {day.irrigationApplied > 0 ? day.irrigationApplied : '-'}
+                          </td>
+                          <td className="p-2 text-right text-emerald-600">{day.soilWater}</td>
                           <td className="p-2 text-right text-orange-600">
-                            {day.waterDeficit > 0 ? day.waterDeficit : '-'}
+                            {day.netWaterDeficit > 0 ? day.netWaterDeficit : '-'}
                           </td>
                         </tr>
                       ))}

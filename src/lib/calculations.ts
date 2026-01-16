@@ -8,6 +8,12 @@
 import type { CropConfig, PhaseThreshold } from '@/config/crops';
 import type { DailyWeatherData } from '@/services/weather';
 
+/** Irrigation event applied by the user */
+export interface IrrigationEvent {
+  date: string;   // YYYY-MM-DD format
+  amount: number; // mm
+}
+
 /** Result of daily irrigation calculation */
 export interface DailyCalculation {
   date: string;
@@ -19,6 +25,9 @@ export interface DailyCalculation {
   etc: number;
   precipitation: number;
   waterDeficit: number;
+  irrigationApplied: number;
+  soilWater: number;        // Available water in soil (mm)
+  netWaterDeficit: number;  // Deficit considering soil water balance
 }
 
 /** Summary statistics for a simulation */
@@ -27,6 +36,8 @@ export interface SimulationSummary {
   totalEtc: number;
   totalPrecipitation: number;
   totalWaterDeficit: number;
+  totalIrrigation: number;
+  netWaterDeficit: number;
   peakPhaseReached: string;
   daysWithDeficit: number;
 }
@@ -124,18 +135,39 @@ export function calculateEtc(et0: number, kc: number): number {
 
 /**
  * Run a full year simulation for a specific crop
+ * 
+ * Uses a soil water balance approach:
+ * - soilWater tracks available water in the root zone
+ * - Water is added by precipitation and irrigation
+ * - Water is removed by crop evapotranspiration (ETc)
+ * - soilWater is capped at field capacity (soilWaterMax)
+ * - When soilWater < ETc demand, a deficit occurs
  */
 export function runYearSimulation(
   weatherData: DailyWeatherData[],
-  cropConfig: CropConfig
+  cropConfig: CropConfig,
+  irrigationEvents: IrrigationEvent[] = []
 ): { daily: DailyCalculation[]; summary: SimulationSummary } {
   const daily: DailyCalculation[] = [];
   let cumulativeGdd = 0;
   let totalEtc = 0;
   let totalPrecipitation = 0;
   let totalWaterDeficit = 0;
+  let totalIrrigation = 0;
+  let totalNetWaterDeficit = 0;
   let daysWithDeficit = 0;
   let peakPhaseReached = 'Dormant';
+
+  // Soil water balance parameters (mm)
+  const soilWaterMax = 100;  // Field capacity - max water soil can hold
+  let soilWater = soilWaterMax * 0.7;  // Start at 70% of field capacity
+
+  // Create a map of irrigation events by date for O(1) lookup
+  const irrigationMap = new Map<string, number>();
+  for (const event of irrigationEvents) {
+    const existing = irrigationMap.get(event.date) || 0;
+    irrigationMap.set(event.date, existing + event.amount);
+  }
 
   for (const day of weatherData) {
     // Calculate daily GDD
@@ -159,14 +191,35 @@ export function runYearSimulation(
     // Calculate crop water requirement
     const etc = calculateEtc(day.et0, kc);
 
-    // Calculate water deficit (ETc - precipitation)
+    // Calculate theoretical water deficit (ETc - precipitation only)
     const waterDeficit = Math.max(0, etc - day.precipitation);
+
+    // Get irrigation applied on this day
+    const irrigationApplied = irrigationMap.get(day.date) || 0;
+
+    // Update soil water balance:
+    // 1. Add precipitation and irrigation
+    soilWater += day.precipitation + irrigationApplied;
+    // 2. Cap at field capacity (excess runs off)
+    soilWater = Math.min(soilWater, soilWaterMax);
+    // 3. Remove ETc (crop water use)
+    soilWater -= etc;
+    
+    // Calculate net water deficit based on soil water balance
+    // If soilWater goes negative, that's the deficit
+    let netWaterDeficit = 0;
+    if (soilWater < 0) {
+      netWaterDeficit = -soilWater;
+      soilWater = 0;  // Soil can't go below 0
+    }
 
     // Accumulate totals
     totalEtc += etc;
     totalPrecipitation += day.precipitation;
     totalWaterDeficit += waterDeficit;
-    if (waterDeficit > 0) {
+    totalIrrigation += irrigationApplied;
+    totalNetWaterDeficit += netWaterDeficit;
+    if (netWaterDeficit > 0) {
       daysWithDeficit++;
     }
 
@@ -180,6 +233,9 @@ export function runYearSimulation(
       etc: Math.round(etc * 10) / 10,
       precipitation: day.precipitation,
       waterDeficit: Math.round(waterDeficit * 10) / 10,
+      irrigationApplied: Math.round(irrigationApplied * 10) / 10,
+      soilWater: Math.round(soilWater * 10) / 10,
+      netWaterDeficit: Math.round(netWaterDeficit * 10) / 10,
     });
   }
 
@@ -188,6 +244,8 @@ export function runYearSimulation(
     totalEtc: Math.round(totalEtc),
     totalPrecipitation: Math.round(totalPrecipitation),
     totalWaterDeficit: Math.round(totalWaterDeficit),
+    totalIrrigation: Math.round(totalIrrigation),
+    netWaterDeficit: Math.round(totalNetWaterDeficit),
     peakPhaseReached,
     daysWithDeficit,
   };

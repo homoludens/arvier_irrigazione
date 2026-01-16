@@ -24,6 +24,9 @@ interface ChartData {
   etc?: number;
   precipitation?: number;
   waterDeficit?: number;
+  irrigationApplied?: number;
+  soilWater?: number;
+  netWaterDeficit?: number;
   kc?: number;
 }
 
@@ -54,6 +57,30 @@ const sampleData = (data: ChartData[], maxPoints: number = 60): ChartData[] => {
   if (data.length <= maxPoints) return data;
   const step = Math.ceil(data.length / maxPoints);
   return data.filter((_, i) => i % step === 0);
+};
+
+// Sample data but always include irrigation days
+const sampleDataWithIrrigation = (data: ChartData[], maxPoints: number = 60): ChartData[] => {
+  if (data.length <= maxPoints) return data;
+  const step = Math.ceil(data.length / maxPoints);
+  const sampled = new Map<string, ChartData>();
+  
+  // First, add sampled points
+  data.forEach((d, i) => {
+    if (i % step === 0) {
+      sampled.set(d.date, d);
+    }
+  });
+  
+  // Then, ensure irrigation days are included
+  data.forEach((d) => {
+    if ((d.irrigationApplied ?? 0) > 0) {
+      sampled.set(d.date, d);
+    }
+  });
+  
+  // Sort by date and return
+  return Array.from(sampled.values()).sort((a, b) => a.date.localeCompare(b.date));
 };
 
 // Colors for phase markers
@@ -197,10 +224,11 @@ export function WeatherChart({ data, height = 200 }: ChartProps) {
 }
 
 /**
- * Water Balance Chart - Shows ETc and water deficit
+ * Water Balance Chart - Shows ETc, water deficit, and irrigation
  */
 export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
-  const chartData = sampleData(data);
+  const hasIrrigation = data.some(d => (d.irrigationApplied ?? 0) > 0);
+  const chartData = hasIrrigation ? sampleDataWithIrrigation(data) : sampleData(data);
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm">
@@ -224,7 +252,8 @@ export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
             formatter={(value, name) => {
               const labels: Record<string, string> = {
                 etc: 'Crop Water Use',
-                waterDeficit: 'Deficit',
+                netWaterDeficit: 'Net Deficit',
+                irrigationApplied: 'Irrigation',
               };
               return [`${Number(value).toFixed(1)} mm`, labels[String(name)] || String(name)];
             }}
@@ -235,7 +264,8 @@ export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
             formatter={(value) => {
               const labels: Record<string, string> = {
                 etc: 'ETc',
-                waterDeficit: 'Deficit',
+                netWaterDeficit: 'Net Deficit',
+                irrigationApplied: 'Irrigation',
               };
               return labels[String(value)] || String(value);
             }}
@@ -250,13 +280,21 @@ export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
           />
           <Area
             type="monotone"
-            dataKey="waterDeficit"
+            dataKey="netWaterDeficit"
             fill="#ef4444"
             fillOpacity={0.3}
             stroke="#ef4444"
             strokeWidth={1}
-            name="waterDeficit"
+            name="netWaterDeficit"
           />
+          {hasIrrigation && (
+            <Bar 
+              dataKey="irrigationApplied" 
+              fill="#0ea5e9" 
+              opacity={0.8}
+              name="irrigationApplied"
+            />
+          )}
         </ComposedChart>
       </ResponsiveContainer>
     </div>
