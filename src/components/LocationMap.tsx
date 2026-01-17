@@ -7,18 +7,24 @@ import type { Coordinates } from '@/types/location';
 // Fix Leaflet default marker icon issue in Next.js
 import 'leaflet/dist/leaflet.css';
 
+export type MapLayerType = 'satellite' | 'streets';
+
 interface LocationMapProps {
   coordinates: Coordinates;
   onLocationSelect: (coords: Coordinates) => void;
+  layerType?: MapLayerType;
 }
 
 export default function LocationMap({
   coordinates,
   onLocationSelect,
+  layerType = 'satellite',
 }: LocationMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const labelsLayerRef = useRef<L.TileLayer | null>(null);
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -37,22 +43,36 @@ export default function LocationMap({
       15
     );
 
-    // Add satellite imagery layer (Esri)
-    L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      {
-        attribution: 'Tiles &copy; Esri',
-        maxZoom: 19,
-      }
-    ).addTo(map);
+    // Add initial tile layer based on layerType
+    const tileLayer = layerType === 'satellite'
+      ? L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          {
+            attribution: 'Tiles &copy; Esri',
+            maxZoom: 19,
+          }
+        )
+      : L.tileLayer(
+          'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19,
+          }
+        );
+    tileLayer.addTo(map);
+    tileLayerRef.current = tileLayer;
 
-    // Add labels overlay for readability
-    L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-      {
-        maxZoom: 19,
-      }
-    ).addTo(map);
+    // Add labels overlay for satellite view
+    if (layerType === 'satellite') {
+      const labelsLayer = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        {
+          maxZoom: 19,
+        }
+      );
+      labelsLayer.addTo(map);
+      labelsLayerRef.current = labelsLayer;
+    }
 
     // Create draggable marker
     const marker = L.marker([coordinates.latitude, coordinates.longitude], {
@@ -102,6 +122,58 @@ export default function LocationMap({
       }
     }
   }, [coordinates]);
+
+  // Update tile layer when layerType changes
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    const map = mapInstanceRef.current;
+
+    // Remove existing layers
+    if (tileLayerRef.current) {
+      map.removeLayer(tileLayerRef.current);
+    }
+    if (labelsLayerRef.current) {
+      map.removeLayer(labelsLayerRef.current);
+      labelsLayerRef.current = null;
+    }
+
+    // Add new tile layer
+    const newTileLayer = layerType === 'satellite'
+      ? L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          {
+            attribution: 'Tiles &copy; Esri',
+            maxZoom: 19,
+          }
+        )
+      : L.tileLayer(
+          'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19,
+          }
+        );
+    newTileLayer.addTo(map);
+    tileLayerRef.current = newTileLayer;
+
+    // Add labels for satellite view
+    if (layerType === 'satellite') {
+      const labelsLayer = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        {
+          maxZoom: 19,
+        }
+      );
+      labelsLayer.addTo(map);
+      labelsLayerRef.current = labelsLayer;
+    }
+
+    // Ensure marker stays on top
+    if (markerRef.current) {
+      markerRef.current.setZIndexOffset(1000);
+    }
+  }, [layerType]);
 
   return (
     <div

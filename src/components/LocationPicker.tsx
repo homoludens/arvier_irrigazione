@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import type { Coordinates, GpsStatus } from '@/types/location';
 import { ARVIER_DEFAULT } from '@/types/location';
 import { fetchGridElevation } from '@/services/weather';
+import type { MapLayerType } from './LocationMap';
 
 // Dynamically import the map to avoid SSR issues with Leaflet
 const LocationMap = dynamic(() => import('./LocationMap'), {
@@ -25,11 +26,13 @@ function LoadingMapText() {
 interface LocationPickerProps {
   onLocationSelect: (coords: Coordinates) => void;
   initialCoords?: Coordinates;
+  mapLayerType?: MapLayerType;
 }
 
 export default function LocationPicker({
   onLocationSelect,
   initialCoords,
+  mapLayerType = 'satellite',
 }: LocationPickerProps) {
   const t = useTranslations('location');
   const tCommon = useTranslations('common');
@@ -179,6 +182,7 @@ export default function LocationPicker({
           <LocationMap
             coordinates={coordinates}
             onLocationSelect={handleMapSelect}
+            layerType={mapLayerType}
           />
         </div>
       )}

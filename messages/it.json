@@ -97,5 +97,11 @@
     "irrigation": "Irrig",
     "soil": "Suolo",
     "deficit": "Deficit"
+  },
+  "settings": {
+    "settings": "Impostazioni",
+    "mapLayer": "Livello Mappa",
+    "satellite": "Satellite",
+    "streets": "Stradale"
   }
 }
