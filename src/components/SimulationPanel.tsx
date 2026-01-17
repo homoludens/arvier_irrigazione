@@ -57,6 +57,8 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
   };
 
   const runSimulation = async () => {
+    const scrollY = window.scrollY;
+    
     setStatus('loading');
     setError(null);
     setSummary(null);
@@ -74,6 +76,11 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
       setSummary(result.summary);
       setDailyData(result.daily);
       setStatus('success');
+      
+      // Restore scroll position after state updates
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY);
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Simulation failed');
       setStatus('error');
