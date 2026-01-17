@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface SoilMoistureGaugeProps {
   moisturePercent: number;
   currentPhase: string;
@@ -11,13 +13,15 @@ export default function SoilMoistureGauge({
   currentPhase,
   isLoading = false,
 }: SoilMoistureGaugeProps) {
+  const t = useTranslations('moisture');
+  const tDashboard = useTranslations('dashboard');
   const moisture = Math.max(0, Math.min(100, moisturePercent));
   
   const getColor = () => {
-    if (moisture >= 60) return { bar: 'bg-emerald-500', text: 'text-emerald-600', label: 'Good' };
-    if (moisture >= 35) return { bar: 'bg-amber-500', text: 'text-amber-600', label: 'Moderate' };
-    if (moisture >= 15) return { bar: 'bg-orange-500', text: 'text-orange-600', label: 'Low' };
-    return { bar: 'bg-red-500', text: 'text-red-600', label: 'Critical' };
+    if (moisture >= 60) return { bar: 'bg-emerald-500', text: 'text-emerald-600', label: t('good') };
+    if (moisture >= 35) return { bar: 'bg-amber-500', text: 'text-amber-600', label: t('moderate') };
+    if (moisture >= 15) return { bar: 'bg-orange-500', text: 'text-orange-600', label: t('low') };
+    return { bar: 'bg-red-500', text: 'text-red-600', label: t('critical') };
   };
 
   const color = getColor();
@@ -38,7 +42,7 @@ export default function SoilMoistureGauge({
     <div className="bg-white rounded-2xl p-4 shadow-sm">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-          Soil Moisture
+          {tDashboard('soilMoisture')}
         </h3>
         <span className="text-xs text-slate-400 font-medium">
           {currentPhase}

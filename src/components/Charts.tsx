@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import {
   LineChart,
   Line,
@@ -93,6 +94,7 @@ const phaseColors = ['#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
  * GDD Cumulative Chart - Shows growing degree days accumulation with phenophase markers
  */
 export function GDDChart({ data, height = 200, phaseThresholds = [] }: GDDChartProps) {
+  const t = useTranslations('charts');
   const chartData = sampleData(data);
   
   // Calculate max GDD for Y-axis domain
@@ -102,7 +104,7 @@ export function GDDChart({ data, height = 200, phaseThresholds = [] }: GDDChartP
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm">
       <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-        Growing Degree Days (GDD)
+        {t('gdd')}
       </h3>
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 5 }} syncId={CHART_SYNC_ID}>
@@ -175,12 +177,13 @@ export function GDDChart({ data, height = 200, phaseThresholds = [] }: GDDChartP
  * ET0 and Precipitation Chart - Shows evapotranspiration and rainfall
  */
 export function WeatherChart({ data, height = 200 }: ChartProps) {
+  const t = useTranslations('charts');
   const chartData = sampleData(data);
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm">
       <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-        ET0 & Precipitation
+        {t('et0Precipitation')}
       </h3>
       <ResponsiveContainer width="100%" height={height}>
         <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} syncId={CHART_SYNC_ID}>
@@ -198,13 +201,13 @@ export function WeatherChart({ data, height = 200 }: ChartProps) {
             labelFormatter={formatDate}
             formatter={(value, name) => [
               `${Number(value).toFixed(1)} mm`,
-              name === 'et0' ? 'ET0' : 'Rain'
+              name === 'et0' ? t('et0') : t('rain')
             ]}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
           />
           <Legend 
             wrapperStyle={{ fontSize: 10 }}
-            formatter={(value) => value === 'et0' ? 'ET0' : 'Precipitation'}
+            formatter={(value) => value === 'et0' ? t('et0') : t('rain')}
           />
           <Bar 
             dataKey="precipitation" 
@@ -230,13 +233,14 @@ export function WeatherChart({ data, height = 200 }: ChartProps) {
  * Water Balance Chart - Shows ETc, water deficit, and irrigation
  */
 export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
+  const t = useTranslations('charts');
   const hasIrrigation = data.some(d => (d.irrigationApplied ?? 0) > 0);
   const chartData = hasIrrigation ? sampleDataWithIrrigation(data) : sampleData(data);
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm">
       <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-        Water Balance
+        {t('waterBalance')}
       </h3>
       <ResponsiveContainer width="100%" height={height}>
         <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} syncId={CHART_SYNC_ID}>
@@ -254,9 +258,9 @@ export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
             labelFormatter={formatDate}
             formatter={(value, name) => {
               const labels: Record<string, string> = {
-                etc: 'Crop Water Use',
-                netWaterDeficit: 'Net Deficit',
-                irrigationApplied: 'Irrigation',
+                etc: t('cropWaterUse'),
+                netWaterDeficit: t('netDeficit'),
+                irrigationApplied: t('irrigation'),
               };
               return [`${Number(value).toFixed(1)} mm`, labels[String(name)] || String(name)];
             }}
@@ -266,9 +270,9 @@ export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
             wrapperStyle={{ fontSize: 10 }}
             formatter={(value) => {
               const labels: Record<string, string> = {
-                etc: 'ETc',
-                netWaterDeficit: 'Net Deficit',
-                irrigationApplied: 'Irrigation',
+                etc: t('etc'),
+                netWaterDeficit: t('netDeficit'),
+                irrigationApplied: t('irrigation'),
               };
               return labels[String(value)] || String(value);
             }}
@@ -308,13 +312,14 @@ export function WaterBalanceChart({ data, height = 200 }: ChartProps) {
  * Soil Water Chart - Shows available soil water over time
  */
 export function SoilWaterChart({ data, height = 150 }: ChartProps) {
+  const t = useTranslations('charts');
   const hasIrrigation = data.some(d => (d.irrigationApplied ?? 0) > 0);
   const chartData = hasIrrigation ? sampleDataWithIrrigation(data) : sampleData(data);
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm">
       <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-        Soil Water (mm)
+        {t('soilWater')}
       </h3>
       <ResponsiveContainer width="100%" height={height}>
         <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} syncId={CHART_SYNC_ID}>
@@ -333,8 +338,8 @@ export function SoilWaterChart({ data, height = 150 }: ChartProps) {
             labelFormatter={formatDate}
             formatter={(value, name) => {
               const labels: Record<string, string> = {
-                soilWater: 'Soil Water',
-                irrigationApplied: 'Irrigation',
+                soilWater: t('soilWater'),
+                irrigationApplied: t('irrigation'),
               };
               return [`${Number(value).toFixed(1)} mm`, labels[String(name)] || String(name)];
             }}
@@ -344,8 +349,8 @@ export function SoilWaterChart({ data, height = 150 }: ChartProps) {
             wrapperStyle={{ fontSize: 10 }}
             formatter={(value) => {
               const labels: Record<string, string> = {
-                soilWater: 'Soil Water',
-                irrigationApplied: 'Irrigation',
+                soilWater: t('soilWater'),
+                irrigationApplied: t('irrigation'),
               };
               return labels[String(value)] || String(value);
             }}
@@ -377,12 +382,13 @@ export function SoilWaterChart({ data, height = 150 }: ChartProps) {
  * Kc Chart - Shows crop coefficient over time
  */
 export function KcChart({ data, height = 150 }: ChartProps) {
+  const t = useTranslations('charts');
   const chartData = sampleData(data);
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm">
       <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-        Crop Coefficient (Kc)
+        {t('cropCoefficient')}
       </h3>
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} syncId={CHART_SYNC_ID}>

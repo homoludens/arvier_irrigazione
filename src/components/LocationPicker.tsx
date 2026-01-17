@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { useTranslations } from 'next-intl';
 import type { Coordinates, GpsStatus } from '@/types/location';
 import { ARVIER_DEFAULT } from '@/types/location';
 import { fetchGridElevation } from '@/services/weather';
@@ -11,10 +12,15 @@ const LocationMap = dynamic(() => import('./LocationMap'), {
   ssr: false,
   loading: () => (
     <div className="h-64 bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
-      Loading map...
+      <LoadingMapText />
     </div>
   ),
 });
+
+function LoadingMapText() {
+  const t = useTranslations('location');
+  return <>{t('loadingMap')}</>;
+}
 
 interface LocationPickerProps {
   onLocationSelect: (coords: Coordinates) => void;
@@ -25,6 +31,8 @@ export default function LocationPicker({
   onLocationSelect,
   initialCoords,
 }: LocationPickerProps) {
+  const t = useTranslations('location');
+  const tCommon = useTranslations('common');
   const [coordinates, setCoordinates] = useState<Coordinates>(
     initialCoords ?? ARVIER_DEFAULT
   );
@@ -105,13 +113,13 @@ export default function LocationPicker({
   const getStatusMessage = (): string => {
     switch (gpsStatus) {
       case 'requesting':
-        return 'Requesting GPS location...';
+        return t('requestingGps');
       case 'success':
-        return 'GPS location acquired';
+        return t('gpsAcquired');
       case 'denied':
-        return 'GPS permission denied. Please select your field on the map.';
+        return t('gpsDenied');
       case 'unavailable':
-        return 'GPS unavailable. Please select your field on the map.';
+        return t('gpsUnavailable');
       default:
         return '';
     }
@@ -127,7 +135,7 @@ export default function LocationPicker({
             onClick={requestGpsLocation}
             className="text-sm text-blue-600 hover:text-blue-800 underline"
           >
-            Retry GPS
+            {t('retryGps')}
           </button>
         )}
       </div>
@@ -135,15 +143,15 @@ export default function LocationPicker({
       {/* Current Coordinates Display */}
       <div className="bg-gray-50 p-3 rounded-lg">
         <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-          Selected Location
+          {t('selectedLocation')}
         </div>
         <div className="font-mono text-sm">
           {coordinates.latitude.toFixed(6)}, {coordinates.longitude.toFixed(6)}
         </div>
         <div className="text-sm text-gray-600 mt-2">
-          Elevation:{' '}
+          {t('elevation')}:{' '}
           {loadingElevation ? (
-            <span className="text-gray-400">Loading...</span>
+            <span className="text-gray-400">{tCommon('loading')}</span>
           ) : elevation !== null ? (
             <span className="font-medium">{elevation}m</span>
           ) : (
@@ -158,7 +166,7 @@ export default function LocationPicker({
           onClick={() => setShowMap(true)}
           className="w-full py-2 px-4 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
         >
-          Fine-tune location on map
+          {t('fineTuneLocation')}
         </button>
       )}
 
@@ -166,7 +174,7 @@ export default function LocationPicker({
       {showMap && (
         <div className="space-y-2">
           <div className="text-sm text-gray-600">
-            Click or drag the marker to select your field location
+            {t('clickOrDrag')}
           </div>
           <LocationMap
             coordinates={coordinates}

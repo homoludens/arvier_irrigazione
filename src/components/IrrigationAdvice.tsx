@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface IrrigationAdviceProps {
   waterDeficit: number;
   kc: number;
@@ -26,14 +28,15 @@ export default function IrrigationAdvice({
   daysWithDeficit,
   isLoading = false,
 }: IrrigationAdviceProps) {
+  const t = useTranslations('irrigation');
   
   const getAdvice = (): Advice => {
     // Critical: High deficit during peak growth
     if (waterDeficit > 30 && kc >= 0.7) {
       return {
         urgency: 'now',
-        title: 'Irrigate Now',
-        subtitle: `${Math.round(waterDeficit)}mm deficit in ${currentPhase}`,
+        title: t('irrigateNow'),
+        subtitle: t('irrigateNowSubtitle', { deficit: Math.round(waterDeficit), phase: currentPhase }),
         bg: 'bg-red-500',
         accent: 'bg-red-600',
         icon: '!',
@@ -44,8 +47,8 @@ export default function IrrigationAdvice({
     if (waterDeficit > 20 || (waterDeficit > 10 && kc >= 0.6)) {
       return {
         urgency: 'soon',
-        title: 'Irrigate Soon',
-        subtitle: `${Math.round(waterDeficit)}mm deficit - plan for 24-48h`,
+        title: t('irrigateSoon'),
+        subtitle: t('irrigateSoonSubtitle', { deficit: Math.round(waterDeficit) }),
         bg: 'bg-amber-500',
         accent: 'bg-amber-600',
         icon: '!',
@@ -56,8 +59,8 @@ export default function IrrigationAdvice({
     if (waterDeficit > 10 || daysWithDeficit > 5) {
       return {
         urgency: 'watch',
-        title: 'Monitor',
-        subtitle: `${Math.round(waterDeficit)}mm deficit over ${daysWithDeficit} days`,
+        title: t('monitor'),
+        subtitle: t('monitorSubtitle', { deficit: Math.round(waterDeficit), days: daysWithDeficit }),
         bg: 'bg-sky-500',
         accent: 'bg-sky-600',
         icon: '?',
@@ -67,8 +70,8 @@ export default function IrrigationAdvice({
     // All good
     return {
       urgency: 'ok',
-      title: 'No Action Needed',
-      subtitle: 'Moisture levels are adequate',
+      title: t('noActionNeeded'),
+      subtitle: t('moistureAdequate'),
       bg: 'bg-emerald-500',
       accent: 'bg-emerald-600',
       icon: '✓',

@@ -2,7 +2,11 @@
   "common": {
     "home": "Home",
     "login": "Accedi",
-    "language": "Lingua"
+    "language": "Lingua",
+    "loading": "Caricamento...",
+    "tryAgain": "Riprova",
+    "add": "Aggiungi",
+    "clearAll": "Cancella tutto"
   },
   "header": {
     "title": "Irrigazione Arvier",
@@ -10,33 +14,88 @@
   },
   "location": {
     "yourField": "Il Tuo Campo",
-    "useGps": "Usa GPS",
-    "selectOnMap": "Seleziona sulla Mappa",
-    "locating": "Localizzazione...",
-    "gpsNotAvailable": "GPS non disponibile"
+    "selectedLocation": "Posizione Selezionata",
+    "elevation": "Altitudine",
+    "loadingMap": "Caricamento mappa...",
+    "requestingGps": "Richiesta posizione GPS...",
+    "gpsAcquired": "Posizione GPS acquisita",
+    "gpsDenied": "Permesso GPS negato. Seleziona il tuo campo sulla mappa.",
+    "gpsUnavailable": "GPS non disponibile. Seleziona il tuo campo sulla mappa.",
+    "retryGps": "Riprova GPS",
+    "fineTuneLocation": "Perfeziona posizione sulla mappa",
+    "clickOrDrag": "Clicca o trascina il marcatore per selezionare la posizione del campo"
   },
   "dashboard": {
     "selectCrop": "Seleziona Coltura",
     "thisSeason": "Questa Stagione",
     "soilMoisture": "Umidità del Suolo",
-    "historicalAnalysis": "Analisi Storica"
+    "historicalAnalysis": "Analisi Storica",
+    "seasonStart": "Inizio Stagione",
+    "growingDegreeDays": "Gradi Giorno di Crescita",
+    "rainfall": "Precipitazioni",
+    "waterUsed": "Acqua Usata (ETc)",
+    "daysInDeficit": "Giorni in Deficit"
   },
   "crops": {
-    "apple": "Melo",
-    "vineyard": "Vigneto",
-    "pasture": "Pascolo"
+    "Apple": "Melo",
+    "Vineyard": "Vigneto",
+    "Pasture": "Pascolo"
   },
   "irrigation": {
     "advice": "Consiglio Irrigazione",
-    "noIrrigation": "Nessuna irrigazione necessaria",
-    "monitor": "Monitora le condizioni",
-    "planIrrigation": "Pianifica irrigazione presto",
-    "irrigateNow": "Irriga ora"
+    "irrigateNow": "Irriga Ora",
+    "irrigateNowSubtitle": "{deficit}mm di deficit in {phase}",
+    "irrigateSoon": "Irriga Presto",
+    "irrigateSoonSubtitle": "{deficit}mm di deficit - pianifica entro 24-48h",
+    "monitor": "Monitora",
+    "monitorSubtitle": "{deficit}mm di deficit negli ultimi {days} giorni",
+    "noActionNeeded": "Nessuna Azione Necessaria",
+    "moistureAdequate": "I livelli di umidità sono adeguati",
+    "irrigationEvents": "Eventi di Irrigazione",
+    "noIrrigationEvents": "Nessun evento di irrigazione aggiunto",
+    "irrigationApplied": "Irrigazione Applicata",
+    "netDeficit": "Deficit Netto"
   },
   "moisture": {
     "good": "Buono",
     "moderate": "Moderato",
     "low": "Basso",
     "critical": "Critico"
+  },
+  "simulation": {
+    "crop": "Coltura",
+    "year": "Anno",
+    "runSimulation": "Avvia Simulazione",
+    "running": "In esecuzione...",
+    "results": "Risultati {year}",
+    "totalGdd": "GDD Totali",
+    "peakPhase": "Fase Massima",
+    "precipitation": "Precipitazioni",
+    "waterDeficit": "Deficit Idrico",
+    "showDataTable": "Mostra Tabella Dati",
+    "hideDataTable": "Nascondi Tabella Dati"
+  },
+  "charts": {
+    "gdd": "Gradi Giorno di Crescita (GDD)",
+    "et0Precipitation": "ET0 e Precipitazioni",
+    "waterBalance": "Bilancio Idrico",
+    "soilWater": "Acqua nel Suolo (mm)",
+    "cropCoefficient": "Coefficiente Colturale (Kc)",
+    "et0": "ET0",
+    "rain": "Pioggia",
+    "etc": "ETc",
+    "cropWaterUse": "Consumo Idrico Coltura",
+    "netDeficit": "Deficit Netto",
+    "irrigation": "Irrigazione"
+  },
+  "table": {
+    "date": "Data",
+    "gdd": "GDD",
+    "phase": "Fase",
+    "etc": "ETc",
+    "rain": "Pioggia",
+    "irrigation": "Irrig",
+    "soil": "Suolo",
+    "deficit": "Deficit"
   }
 }

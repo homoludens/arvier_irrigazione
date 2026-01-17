@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { CROP_SETTINGS, type CropType } from '@/config/crops';
 import { runYearSimulation, type DailyCalculation } from '@/lib/calculations';
 import { fetchSeasonWeather } from '@/services/weather';
@@ -31,6 +32,9 @@ const getDefaultSeasonStart = () => {
 };
 
 export default function CropDashboard({ coordinates }: CropDashboardProps) {
+  const t = useTranslations('dashboard');
+  const tCrops = useTranslations('crops');
+  const tCommon = useTranslations('common');
   const [selectedCrop, setSelectedCrop] = useState<CropType>('Apple');
   const [seasonStart, setSeasonStart] = useState<string>(getDefaultSeasonStart());
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -107,7 +111,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
       {/* Crop Selector & Season Start */}
       <div className="bg-white rounded-2xl p-4 shadow-sm">
         <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-          Select Crop
+          {t('selectCrop')}
         </h2>
         <div className="grid grid-cols-3 gap-2">
           {cropNames.map((crop) => (
@@ -120,7 +124,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300'
               }`}
             >
-              {crop}
+              {tCrops(crop)}
             </button>
           ))}
         </div>
@@ -142,7 +146,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
             onClick={fetchWeatherData}
             className="text-sm text-red-600 font-medium underline"
           >
-            Try again
+            {tCommon('tryAgain')}
           </button>
         </div>
       )}
@@ -155,7 +159,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
             onClick={() => setShowCharts(!showCharts)}
             className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl shadow-sm text-slate-700 font-medium hover:bg-slate-50 active:bg-slate-100 transition-colors"
           >
-            <span>This season</span>
+            <span>{t('thisSeason')}</span>
 
 
             <svg
@@ -175,7 +179,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
               {/* Season Start Date */}
               <div className="mt-4 pt-4 border-t border-slate-100">
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                  Season Start
+                  {t('seasonStart')}
                 </label>
                 <input
                   type="date"
@@ -204,32 +208,32 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
               {waterBalance && status === 'success' && (
                 <div className="bg-white rounded-2xl p-4 shadow-sm">
                   <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                    This Season
+                    {t('thisSeason')}
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-2xl font-bold text-slate-900">
                         {Math.round(waterBalance.cumulativeGdd)}
                       </p>
-                      <p className="text-xs text-slate-500">Growing Degree Days</p>
+                      <p className="text-xs text-slate-500">{t('growingDegreeDays')}</p>
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-slate-900">
                         {waterBalance.totalPrecipitation}<span className="text-base font-normal text-slate-400">mm</span>
                       </p>
-                      <p className="text-xs text-slate-500">Rainfall</p>
+                      <p className="text-xs text-slate-500">{t('rainfall')}</p>
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-slate-900">
                         {waterBalance.totalEtc}<span className="text-base font-normal text-slate-400">mm</span>
                       </p>
-                      <p className="text-xs text-slate-500">Water Used (ETc)</p>
+                      <p className="text-xs text-slate-500">{t('waterUsed')}</p>
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-slate-900">
                         {waterBalance.daysWithDeficit}
                       </p>
-                      <p className="text-xs text-slate-500">Days in Deficit</p>
+                      <p className="text-xs text-slate-500">{t('daysInDeficit')}</p>
                     </div>
                   </div>
                 </div>

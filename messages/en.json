@@ -2,7 +2,11 @@
   "common": {
     "home": "Home",
     "login": "Login",
-    "language": "Language"
+    "language": "Language",
+    "loading": "Loading...",
+    "tryAgain": "Try again",
+    "add": "Add",
+    "clearAll": "Clear all"
   },
   "header": {
     "title": "Arvier Irrigation",
@@ -10,33 +14,88 @@
   },
   "location": {
     "yourField": "Your Field",
-    "useGps": "Use GPS",
-    "selectOnMap": "Select on Map",
-    "locating": "Locating...",
-    "gpsNotAvailable": "GPS not available"
+    "selectedLocation": "Selected Location",
+    "elevation": "Elevation",
+    "loadingMap": "Loading map...",
+    "requestingGps": "Requesting GPS location...",
+    "gpsAcquired": "GPS location acquired",
+    "gpsDenied": "GPS permission denied. Please select your field on the map.",
+    "gpsUnavailable": "GPS unavailable. Please select your field on the map.",
+    "retryGps": "Retry GPS",
+    "fineTuneLocation": "Fine-tune location on map",
+    "clickOrDrag": "Click or drag the marker to select your field location"
   },
   "dashboard": {
     "selectCrop": "Select Crop",
     "thisSeason": "This Season",
     "soilMoisture": "Soil Moisture",
-    "historicalAnalysis": "Historical Analysis"
+    "historicalAnalysis": "Historical Analysis",
+    "seasonStart": "Season Start",
+    "growingDegreeDays": "Growing Degree Days",
+    "rainfall": "Rainfall",
+    "waterUsed": "Water Used (ETc)",
+    "daysInDeficit": "Days in Deficit"
   },
   "crops": {
-    "apple": "Apple",
-    "vineyard": "Vineyard",
-    "pasture": "Pasture"
+    "Apple": "Apple",
+    "Vineyard": "Vineyard",
+    "Pasture": "Pasture"
   },
   "irrigation": {
     "advice": "Irrigation Advice",
-    "noIrrigation": "No irrigation needed",
-    "monitor": "Monitor conditions",
-    "planIrrigation": "Plan irrigation soon",
-    "irrigateNow": "Irrigate now"
+    "irrigateNow": "Irrigate Now",
+    "irrigateNowSubtitle": "{deficit}mm deficit in {phase}",
+    "irrigateSoon": "Irrigate Soon",
+    "irrigateSoonSubtitle": "{deficit}mm deficit - plan for 24-48h",
+    "monitor": "Monitor",
+    "monitorSubtitle": "{deficit}mm deficit over {days} days",
+    "noActionNeeded": "No Action Needed",
+    "moistureAdequate": "Moisture levels are adequate",
+    "irrigationEvents": "Irrigation Events",
+    "noIrrigationEvents": "No irrigation events added",
+    "irrigationApplied": "Irrigation Applied",
+    "netDeficit": "Net Deficit"
   },
   "moisture": {
     "good": "Good",
     "moderate": "Moderate",
     "low": "Low",
     "critical": "Critical"
+  },
+  "simulation": {
+    "crop": "Crop",
+    "year": "Year",
+    "runSimulation": "Run Simulation",
+    "running": "Running...",
+    "results": "{year} Results",
+    "totalGdd": "Total GDD",
+    "peakPhase": "Peak Phase",
+    "precipitation": "Precipitation",
+    "waterDeficit": "Water Deficit",
+    "showDataTable": "Show Data Table",
+    "hideDataTable": "Hide Data Table"
+  },
+  "charts": {
+    "gdd": "Growing Degree Days (GDD)",
+    "et0Precipitation": "ET0 & Precipitation",
+    "waterBalance": "Water Balance",
+    "soilWater": "Soil Water (mm)",
+    "cropCoefficient": "Crop Coefficient (Kc)",
+    "et0": "ET0",
+    "rain": "Rain",
+    "etc": "ETc",
+    "cropWaterUse": "Crop Water Use",
+    "netDeficit": "Net Deficit",
+    "irrigation": "Irrigation"
+  },
+  "table": {
+    "date": "Date",
+    "gdd": "GDD",
+    "phase": "Phase",
+    "etc": "ETc",
+    "rain": "Rain",
+    "irrigation": "Irrig",
+    "soil": "Soil",
+    "deficit": "Deficit"
   }
 }

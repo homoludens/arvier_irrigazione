@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { CROP_SETTINGS, type CropType } from '@/config/crops';
 import { fetchHistoricalWeather, getAvailableYears } from '@/services/weather';
 import { runYearSimulation, type SimulationSummary, type DailyCalculation, type IrrigationEvent } from '@/lib/calculations';
@@ -14,6 +15,11 @@ interface SimulationPanelProps {
 type SimulationStatus = 'idle' | 'loading' | 'success' | 'error';
 
 export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
+  const t = useTranslations('simulation');
+  const tCrops = useTranslations('crops');
+  const tIrrigation = useTranslations('irrigation');
+  const tCommon = useTranslations('common');
+  const tTable = useTranslations('table');
   const [selectedYear, setSelectedYear] = useState<number>(getAvailableYears()[0]);
   const [selectedCrop, setSelectedCrop] = useState<CropType>('Apple');
   const [status, setStatus] = useState<SimulationStatus>('idle');
@@ -79,7 +85,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
       {/* Controls */}
       <div className="bg-white rounded-xl p-4 shadow-sm">
         {/* Crop Selector */}
-        <label className="block text-xs text-slate-500 mb-2">Crop</label>
+        <label className="block text-xs text-slate-500 mb-2">{t('crop')}</label>
         <div className="grid grid-cols-3 gap-2 mb-4">
           {(Object.keys(CROP_SETTINGS) as CropType[]).map((crop) => (
             <button
@@ -92,13 +98,13 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300'
               } disabled:opacity-50`}
             >
-              {crop}
+              {tCrops(crop)}
             </button>
           ))}
         </div>
 
         {/* Year Selector */}
-        <label className="block text-xs text-slate-500 mb-2">Year</label>
+        <label className="block text-xs text-slate-500 mb-2">{t('year')}</label>
         <select
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -111,7 +117,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
         </select>
 
         {/* Irrigation Events */}
-        <label className="block text-xs text-slate-500 mb-2">Irrigation Events</label>
+        <label className="block text-xs text-slate-500 mb-2">{tIrrigation('irrigationEvents')}</label>
         <div className="bg-slate-50 rounded-lg p-3 mb-4">
           <div className="flex gap-2 mb-3">
             <input
@@ -138,7 +144,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
               disabled={status === 'loading' || !newIrrigationDate || !newIrrigationAmount}
               className="px-3 py-2 bg-sky-500 text-white rounded-lg font-semibold text-sm hover:bg-sky-600 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
             >
-              Add
+              {tCommon('add')}
             </button>
           </div>
 
@@ -167,14 +173,14 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
                 className="w-full mt-2 py-1.5 text-xs text-slate-500 hover:text-red-500 transition-colors"
                 disabled={status === 'loading'}
               >
-                Clear all
+                {tCommon('clearAll')}
               </button>
             </div>
           )}
 
           {irrigationEvents.length === 0 && (
             <p className="text-xs text-slate-400 text-center">
-              No irrigation events added
+              {tIrrigation('noIrrigationEvents')}
             </p>
           )}
         </div>
@@ -184,7 +190,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
           disabled={status === 'loading'}
           className="w-full py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 active:bg-emerald-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
         >
-          {status === 'loading' ? 'Running...' : 'Run Simulation'}
+          {status === 'loading' ? t('running') : t('runSimulation')}
         </button>
       </div>
 
@@ -215,7 +221,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                {selectedYear} Results
+                {t('results', { year: selectedYear })}
               </h3>
               {elevation !== null && (
                 <span className="text-xs text-slate-400">{Math.round(elevation)}m</span>
@@ -225,29 +231,29 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-2xl font-bold text-slate-900">{summary.totalGdd}°</p>
-                <p className="text-xs text-slate-500">Total GDD</p>
+                <p className="text-xs text-slate-500">{t('totalGdd')}</p>
               </div>
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-2xl font-bold text-slate-900">{summary.peakPhaseReached}</p>
-                <p className="text-xs text-slate-500">Peak Phase</p>
+                <p className="text-xs text-slate-500">{t('peakPhase')}</p>
               </div>
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-2xl font-bold text-slate-900">{summary.totalPrecipitation}<span className="text-sm font-normal">mm</span></p>
-                <p className="text-xs text-slate-500">Precipitation</p>
+                <p className="text-xs text-slate-500">{t('precipitation')}</p>
               </div>
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-2xl font-bold text-orange-600">{summary.totalWaterDeficit}<span className="text-sm font-normal">mm</span></p>
-                <p className="text-xs text-slate-500">Water Deficit</p>
+                <p className="text-xs text-slate-500">{t('waterDeficit')}</p>
               </div>
               {summary.totalIrrigation > 0 && (
                 <>
                   <div className="bg-slate-50 rounded-lg p-3">
                     <p className="text-2xl font-bold text-sky-600">{summary.totalIrrigation}<span className="text-sm font-normal">mm</span></p>
-                    <p className="text-xs text-slate-500">Irrigation Applied</p>
+                    <p className="text-xs text-slate-500">{tIrrigation('irrigationApplied')}</p>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
                     <p className="text-2xl font-bold text-emerald-600">{summary.netWaterDeficit}<span className="text-sm font-normal">mm</span></p>
-                    <p className="text-xs text-slate-500">Net Deficit</p>
+                    <p className="text-xs text-slate-500">{tIrrigation('netDeficit')}</p>
                   </div>
                 </>
               )}
@@ -259,7 +265,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
             onClick={() => setShowTable(!showTable)}
             className="w-full py-3 bg-white rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 border border-slate-200 transition-colors"
           >
-            {showTable ? 'Hide Data Table' : 'Show Data Table'}
+            {showTable ? t('hideDataTable') : t('showDataTable')}
           </button>
 
 
@@ -271,14 +277,14 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
                 <table className="w-full text-xs">
                   <thead className="bg-slate-100">
                     <tr>
-                      <th className="p-2 text-left font-semibold text-slate-600">Date</th>
-                      <th className="p-2 text-right font-semibold text-slate-600">GDD</th>
-                      <th className="p-2 text-left font-semibold text-slate-600">Phase</th>
-                      <th className="p-2 text-right font-semibold text-slate-600">ETc</th>
-                      <th className="p-2 text-right font-semibold text-slate-600">Rain</th>
-                      <th className="p-2 text-right font-semibold text-slate-600">Irrig</th>
-                      <th className="p-2 text-right font-semibold text-slate-600">Soil</th>
-                      <th className="p-2 text-right font-semibold text-slate-600">Deficit</th>
+                      <th className="p-2 text-left font-semibold text-slate-600">{tTable('date')}</th>
+                      <th className="p-2 text-right font-semibold text-slate-600">{tTable('gdd')}</th>
+                      <th className="p-2 text-left font-semibold text-slate-600">{tTable('phase')}</th>
+                      <th className="p-2 text-right font-semibold text-slate-600">{tTable('etc')}</th>
+                      <th className="p-2 text-right font-semibold text-slate-600">{tTable('rain')}</th>
+                      <th className="p-2 text-right font-semibold text-slate-600">{tTable('irrigation')}</th>
+                      <th className="p-2 text-right font-semibold text-slate-600">{tTable('soil')}</th>
+                      <th className="p-2 text-right font-semibold text-slate-600">{tTable('deficit')}</th>
                     </tr>
                   </thead>
                   <tbody>
