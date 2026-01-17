@@ -49,9 +49,6 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body className="bg-slate-100 min-h-screen">
         <NextIntlClientProvider messages={messages}>
-          <div className="absolute top-4 right-4 z-50">
-            <LanguageSwitcher />
-          </div>
           {children}
         </NextIntlClientProvider>
       </body>
