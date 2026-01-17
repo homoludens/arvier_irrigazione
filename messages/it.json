@@ -1,0 +1,42 @@
+{
+  "common": {
+    "home": "Home",
+    "login": "Accedi",
+    "language": "Lingua"
+  },
+  "header": {
+    "title": "Irrigazione Arvier",
+    "subtitle": "Valle d'Aosta, Italia"
+  },
+  "location": {
+    "yourField": "Il Tuo Campo",
+    "useGps": "Usa GPS",
+    "selectOnMap": "Seleziona sulla Mappa",
+    "locating": "Localizzazione...",
+    "gpsNotAvailable": "GPS non disponibile"
+  },
+  "dashboard": {
+    "selectCrop": "Seleziona Coltura",
+    "thisSeason": "Questa Stagione",
+    "soilMoisture": "Umidità del Suolo",
+    "historicalAnalysis": "Analisi Storica"
+  },
+  "crops": {
+    "apple": "Melo",
+    "vineyard": "Vigneto",
+    "pasture": "Pascolo"
+  },
+  "irrigation": {
+    "advice": "Consiglio Irrigazione",
+    "noIrrigation": "Nessuna irrigazione necessaria",
+    "monitor": "Monitora le condizioni",
+    "planIrrigation": "Pianifica irrigazione presto",
+    "irrigateNow": "Irriga ora"
+  },
+  "moisture": {
+    "good": "Buono",
+    "moderate": "Moderato",
+    "low": "Basso",
+    "critical": "Critico"
+  }
+}

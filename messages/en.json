@@ -1,0 +1,42 @@
+{
+  "common": {
+    "home": "Home",
+    "login": "Login",
+    "language": "Language"
+  },
+  "header": {
+    "title": "Arvier Irrigation",
+    "subtitle": "Aosta Valley, Italy"
+  },
+  "location": {
+    "yourField": "Your Field",
+    "useGps": "Use GPS",
+    "selectOnMap": "Select on Map",
+    "locating": "Locating...",
+    "gpsNotAvailable": "GPS not available"
+  },
+  "dashboard": {
+    "selectCrop": "Select Crop",
+    "thisSeason": "This Season",
+    "soilMoisture": "Soil Moisture",
+    "historicalAnalysis": "Historical Analysis"
+  },
+  "crops": {
+    "apple": "Apple",
+    "vineyard": "Vineyard",
+    "pasture": "Pasture"
+  },
+  "irrigation": {
+    "advice": "Irrigation Advice",
+    "noIrrigation": "No irrigation needed",
+    "monitor": "Monitor conditions",
+    "planIrrigation": "Plan irrigation soon",
+    "irrigateNow": "Irrigate now"
+  },
+  "moisture": {
+    "good": "Good",
+    "moderate": "Moderate",
+    "low": "Low",
+    "critical": "Critical"
+  }
+}
