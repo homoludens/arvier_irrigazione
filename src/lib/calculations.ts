@@ -19,6 +19,7 @@ export interface DailyCalculation {
   date: string;
   gddDaily: number;
   gddCumulative: number;
+  gddCycle: number;         // GDD within current growth cycle (resets for Pasture)
   currentPhase: string;
   kc: number;
   et0: number;
@@ -142,14 +143,19 @@ export function calculateEtc(et0: number, kc: number): number {
  * - Water is removed by crop evapotranspiration (ETc)
  * - soilWater is capped at field capacity (soilWaterMax)
  * - When soilWater < ETc demand, a deficit occurs
+ * 
+ * For Pasture: GDD resets every 800 GDD (harvest cycle), allowing
+ * multiple growth cycles per year with Kc resetting to kcInitial.
  */
 export function runYearSimulation(
   weatherData: DailyWeatherData[],
   cropConfig: CropConfig,
-  irrigationEvents: IrrigationEvent[] = []
+  irrigationEvents: IrrigationEvent[] = [],
+  isPasture: boolean = false
 ): { daily: DailyCalculation[]; summary: SimulationSummary } {
   const daily: DailyCalculation[] = [];
   let cumulativeGdd = 0;
+  let cycleGdd = 0;  // GDD within current growth cycle (for Pasture)
   let totalEtc = 0;
   let totalPrecipitation = 0;
   let totalWaterDeficit = 0;
@@ -157,6 +163,9 @@ export function runYearSimulation(
   let totalNetWaterDeficit = 0;
   let daysWithDeficit = 0;
   let peakPhaseReached = 'Dormant';
+  
+  // Pasture harvest cycle threshold
+  const pastureHarvestGdd = 800;
 
   // Soil water balance parameters (mm)
   const soilWaterMax = 100;  // Field capacity - max water soil can hold
@@ -177,16 +186,25 @@ export function runYearSimulation(
       cropConfig.baseTemp
     );
     cumulativeGdd += gddDaily;
+    cycleGdd += gddDaily;
+    
+    // For Pasture: reset cycle GDD when harvest threshold is reached
+    if (isPasture && cycleGdd >= pastureHarvestGdd) {
+      cycleGdd = cycleGdd - pastureHarvestGdd;  // Carry over excess GDD to next cycle
+    }
+    
+    // Use cycle GDD for Pasture (resets each harvest), cumulative for other crops
+    const gddForPhaseAndKc = isPasture ? cycleGdd : cumulativeGdd;
 
-    // Determine current growth phase
+    // Determine current growth phase (use cycle GDD for Pasture)
     const currentPhase = getCurrentPhase(
-      cumulativeGdd,
+      gddForPhaseAndKc,
       cropConfig.phaseThresholds
     );
     peakPhaseReached = currentPhase;
 
-    // Calculate Kc for current growth stage
-    const kc = interpolateKc(cumulativeGdd, cropConfig);
+    // Calculate Kc for current growth stage (use cycle GDD for Pasture)
+    const kc = interpolateKc(gddForPhaseAndKc, cropConfig);
 
     // Calculate crop water requirement
     const etc = calculateEtc(day.et0, kc);
@@ -227,6 +245,7 @@ export function runYearSimulation(
       date: day.date,
       gddDaily: Math.round(gddDaily * 10) / 10,
       gddCumulative: Math.round(cumulativeGdd * 10) / 10,
+      gddCycle: Math.round(cycleGdd * 10) / 10,
       currentPhase,
       kc: Math.round(kc * 100) / 100,
       et0: day.et0,

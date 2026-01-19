@@ -71,7 +71,8 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
       );
       setElevation(elev);
 
-      const result = runYearSimulation(weatherData, cropConfig, irrigationEvents);
+      const isPasture = selectedCrop === 'Pasture';
+      const result = runYearSimulation(weatherData, cropConfig, irrigationEvents, isPasture);
 
       setSummary(result.summary);
       setDailyData(result.daily);
@@ -220,7 +221,7 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
 
           <WeatherChart data={dailyData} />
 
-          <GDDChart data={dailyData} phaseThresholds={cropConfig.phaseThresholds} />
+          <GDDChart data={dailyData} phaseThresholds={cropConfig.phaseThresholds} isPasture={selectedCrop === 'Pasture'} />
 
           <KcChart data={dailyData} />
 

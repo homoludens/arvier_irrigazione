@@ -76,7 +76,7 @@ export const CROP_SETTINGS = {
   },
 
   Pasture: {
-    baseTemp: 0.0,
+    baseTemp: 5.0,
     kcInitial: 0.50,
     kcPeak: 1.05,
     kcEnd: 0.8,

@@ -66,7 +66,8 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
     if (!weatherCache) return;
 
     const cropConfig = CROP_SETTINGS[cropType];
-    const { daily, summary } = runYearSimulation(weatherCache.data, cropConfig);
+    const isPasture = cropType === 'Pasture';
+    const { daily, summary } = runYearSimulation(weatherCache.data, cropConfig, [], isPasture);
 
     const recentDays = daily.slice(-14);
     const latestDay = daily[daily.length - 1];
@@ -240,7 +241,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
               )}
 
 
-              <GDDChart data={dailyData} height={180} phaseThresholds={cropConfig.phaseThresholds} />
+              <GDDChart data={dailyData} height={180} phaseThresholds={cropConfig.phaseThresholds} isPasture={selectedCrop === 'Pasture'} />
               <WeatherChart data={dailyData} height={180} />
               <WaterBalanceChart data={dailyData} height={180} />
             </div>

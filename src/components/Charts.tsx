@@ -23,6 +23,7 @@ const CHART_SYNC_ID = 'irrigation-charts';
 interface ChartData {
   date: string;
   gddCumulative?: number;
+  gddCycle?: number;
   gddDaily?: number;
   et0?: number;
   etc?: number;
@@ -41,6 +42,7 @@ interface ChartProps {
 
 interface GDDChartProps extends ChartProps {
   phaseThresholds?: PhaseThreshold[];
+  isPasture?: boolean;
 }
 
 // Format date for display (MM/DD)
@@ -92,19 +94,25 @@ const phaseColors = ['#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
 /**
  * GDD Cumulative Chart - Shows growing degree days accumulation with phenophase markers
+ * For Pasture, shows cycle GDD (resets at 800) instead of cumulative
  */
-export function GDDChart({ data, height = 200, phaseThresholds = [] }: GDDChartProps) {
+export function GDDChart({ data, height = 200, phaseThresholds = [], isPasture = false }: GDDChartProps) {
   const t = useTranslations('charts');
   const chartData = sampleData(data);
   
+  // For Pasture, use gddCycle which resets at each harvest; otherwise use cumulative
+  const gddKey = isPasture ? 'gddCycle' : 'gddCumulative';
+  
   // Calculate max GDD for Y-axis domain
-  const maxGdd = Math.max(...data.map(d => d.gddCumulative || 0));
-  const yMax = Math.max(maxGdd * 1.1, ...phaseThresholds.map(p => p.gdd * 1.1));
+  const maxGdd = Math.max(...data.map(d => (isPasture ? d.gddCycle : d.gddCumulative) || 0));
+  const yMax = isPasture 
+    ? Math.max(maxGdd * 1.1, ...phaseThresholds.map(p => p.gdd * 1.1))
+    : Math.max(maxGdd * 1.1, ...phaseThresholds.map(p => p.gdd * 1.1));
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm">
       <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-        {t('gdd')}
+        {t('gdd')}{isPasture ? ' (Cycle)' : ''}
       </h3>
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 5 }} syncId={CHART_SYNC_ID}>
@@ -121,7 +129,7 @@ export function GDDChart({ data, height = 200, phaseThresholds = [] }: GDDChartP
           />
           <Tooltip
             labelFormatter={formatDate}
-            formatter={(value) => [`${Math.round(Number(value))}°`, 'GDD']}
+            formatter={(value) => [`${Math.round(Number(value))}°`, isPasture ? 'Cycle GDD' : 'GDD']}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}
           />
           
@@ -145,11 +153,11 @@ export function GDDChart({ data, height = 200, phaseThresholds = [] }: GDDChartP
           
           <Line
             type="monotone"
-            dataKey="gddCumulative"
+            dataKey={gddKey}
             stroke="#10b981"
             strokeWidth={2}
             dot={false}
-            name="Cumulative GDD"
+            name={isPasture ? 'Cycle GDD' : 'Cumulative GDD'}
           />
         </LineChart>
       </ResponsiveContainer>
