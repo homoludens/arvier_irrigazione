@@ -12,6 +12,8 @@ import { GDDChart, WeatherChart, WaterBalanceChart } from './Charts';
 
 interface CropDashboardProps {
   coordinates: Coordinates;
+  selectedCrop: CropType;
+  onCropChange: (crop: CropType) => void;
 }
 
 interface WaterBalanceData {
@@ -31,11 +33,10 @@ const getDefaultSeasonStart = () => {
   return `${year}-01-01`;
 };
 
-export default function CropDashboard({ coordinates }: CropDashboardProps) {
+export default function CropDashboard({ coordinates, selectedCrop, onCropChange }: CropDashboardProps) {
   const t = useTranslations('dashboard');
   const tCrops = useTranslations('crops');
   const tCommon = useTranslations('common');
-  const [selectedCrop, setSelectedCrop] = useState<CropType>('Apple');
   const [seasonStart, setSeasonStart] = useState<string>(getDefaultSeasonStart());
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -118,7 +119,7 @@ export default function CropDashboard({ coordinates }: CropDashboardProps) {
           {cropNames.map((crop) => (
             <button
               key={crop}
-              onClick={() => setSelectedCrop(crop)}
+              onClick={() => onCropChange(crop)}
               className={`py-3 px-2 rounded-xl font-semibold text-sm transition-all ${
                 selectedCrop === crop
                   ? 'bg-emerald-600 text-white shadow-md'

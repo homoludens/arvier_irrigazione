@@ -6,12 +6,14 @@ import LocationPicker from '@/components/LocationPicker';
 import CropDashboard from '@/components/CropDashboard';
 import SimulationPanel from '@/components/SimulationPanel';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
-import type { Coordinates } from '@/types/location';
+import { ARVIER_DEFAULT, type Coordinates } from '@/types/location';
 import type { MapLayerType } from '@/components/LocationMap';
+import type { CropType } from '@/config/crops';
 import { useTranslations } from 'next-intl';
 
 export default function Home() {
-  const [location, setLocation] = useState<Coordinates | null>(null);
+  const [location, setLocation] = useState<Coordinates>(ARVIER_DEFAULT);
+  const [selectedCrop, setSelectedCrop] = useState<CropType>('Apple');
   const [showHistory, setShowHistory] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [mapLayerType, setMapLayerType] = useState<MapLayerType>('satellite');
@@ -95,14 +97,15 @@ export default function Home() {
           <LocationPicker onLocationSelect={setLocation} mapLayerType={mapLayerType} />
         </section>
 
-        {/* Dashboard - shows when location is set */}
-        {location && (
-          <CropDashboard coordinates={location} />
-        )}
+        {/* Dashboard */}
+        <CropDashboard 
+          coordinates={location} 
+          selectedCrop={selectedCrop}
+          onCropChange={setSelectedCrop}
+        />
 
         {/* Historical Toggle */}
-        {location && (
-          <section>
+        <section>
             <button
               onClick={() => setShowHistory(!showHistory)}
               className="w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl shadow-sm border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 active:bg-slate-100 transition-colors"
@@ -118,13 +121,12 @@ export default function Home() {
               </svg>
             </button>
 
-            {showHistory && (
-              <div className="mt-3">
-                <SimulationPanel coordinates={location} />
-              </div>
-            )}
-          </section>
-        )}
+          {showHistory && (
+            <div className="mt-3">
+              <SimulationPanel coordinates={location} selectedCrop={selectedCrop} />
+            </div>
+          )}
+        </section>
       </div>
     </main>
   );

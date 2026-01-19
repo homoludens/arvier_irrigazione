@@ -10,18 +10,18 @@ import { GDDChart, WeatherChart, WaterBalanceChart, SoilWaterChart, KcChart } fr
 
 interface SimulationPanelProps {
   coordinates: Coordinates;
+  selectedCrop: CropType;
 }
 
 type SimulationStatus = 'idle' | 'loading' | 'success' | 'error';
 
-export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
+export default function SimulationPanel({ coordinates, selectedCrop }: SimulationPanelProps) {
   const t = useTranslations('simulation');
   const tCrops = useTranslations('crops');
   const tIrrigation = useTranslations('irrigation');
   const tCommon = useTranslations('common');
   const tTable = useTranslations('table');
   const [selectedYear, setSelectedYear] = useState<number>(getAvailableYears()[0]);
-  const [selectedCrop, setSelectedCrop] = useState<CropType>('Apple');
   const [status, setStatus] = useState<SimulationStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<SimulationSummary | null>(null);
@@ -92,25 +92,6 @@ export default function SimulationPanel({ coordinates }: SimulationPanelProps) {
     <div className="space-y-4">
       {/* Controls */}
       <div className="bg-white rounded-xl p-4 shadow-sm">
-        {/* Crop Selector */}
-        <label className="block text-xs text-slate-500 mb-2">{t('crop')}</label>
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          {(Object.keys(CROP_SETTINGS) as CropType[]).map((crop) => (
-            <button
-              key={crop}
-              onClick={() => setSelectedCrop(crop)}
-              disabled={status === 'loading'}
-              className={`py-2.5 px-2 rounded-lg font-semibold text-sm transition-all ${
-                selectedCrop === crop
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 active:bg-slate-300'
-              } disabled:opacity-50`}
-            >
-              {tCrops(crop)}
-            </button>
-          ))}
-        </div>
-
         {/* Year Selector */}
         <label className="block text-xs text-slate-500 mb-2">{t('year')}</label>
         <select
